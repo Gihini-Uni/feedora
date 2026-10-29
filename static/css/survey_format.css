@@ -668,3 +668,17 @@ input,textarea,select{font-family:inherit;}
   font-family:inherit;transition:opacity 0.15s;
 }
 .pub-btn-primary:hover{opacity:0.85;}
+
+.btn-discard {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1.5px solid #e3dced;
+  background: #fff;
+  color: #a04545;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.btn-discard:hover { background: #fdf5f5; border-color: #e0b4b4; }

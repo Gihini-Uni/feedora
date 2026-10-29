@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Progress — Feedora</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+  <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.10/dist/dotlottie-wc.js" type="module"></script>
+</head>
+<body>
+
+<div class="pf-topbar">
+  <a href="/" class="pf-brand">Feedora</a>
+</div>
+
+<div class="pf-shell">
+
+  <aside class="pf-sidebar">
+    <ul class="pf-nav">
+      <li><a href="{% url 'respondent_profile' %}" class="{% if active_tab == 'profile' %}active{% endif %}">My profile</a></li>
+      <li><a href="{% url 'respondent_progress' %}" class="{% if active_tab == 'progress' %}active{% endif %}">My Progress</a></li>
+    </ul>
+  </aside>
+
+  <main class="pf-content">
+    <h1 class="pf-heading">My Progress</h1>
+    <p class="pf-subheading">View your progress here</p>
+
+    <div class="pf-progress-layout">
+
+      <!-- LEFT — podium + leaderboard -->
+        <div class="pf-progress-col">
+
+        <!-- Podium with top-3 avatars -->
+        <div class="pf-podium">
+        <!-- Rank 3 — left -->
+        {% for p in podium %}{% if p.rank == 3 %}
+        <div class="pf-podium-slot">
+            <div class="pf-podium-avatar rank3">{{ p.initial }}</div>
+            <div class="pf-podium-bar pf-bar-3">3</div>
+        </div>
+        {% endif %}{% endfor %}
+
+        <!-- Rank 1 — middle -->
+        {% for p in podium %}{% if p.rank == 1 %}
+        <div class="pf-podium-slot">
+            <div class="pf-podium-crown">&#128081;</div>
+            <div class="pf-podium-avatar rank1">{{ p.initial }}</div>
+            <div class="pf-podium-bar pf-bar-1">1</div>
+        </div>
+        {% endif %}{% endfor %}
+
+        <!-- Rank 2 — right -->
+        {% for p in podium %}{% if p.rank == 2 %}
+        <div class="pf-podium-slot">
+            <div class="pf-podium-avatar rank2">{{ p.initial }}</div>
+            <div class="pf-podium-bar pf-bar-2">2</div>
+        </div>
+        {% endif %}{% endfor %}
+        </div>
+
+        <div class="pf-leaderboard-card">
+            <div class="pf-lb-head">
+            <span class="pf-lb-title">Rank</span>
+            </div>
+            {% for row in leaderboard %}
+            <div class="pf-lb-row {% if row.is_me %}is-me{% endif %}">
+            <span class="pf-lb-rank">{{ row.rank }}</span>
+            <span class="pf-lb-avatar">{{ row.initial }}</span>
+            <span class="pf-lb-name">{{ row.name }}</span>
+            {% if row.badge_image %}
+                <img class="pf-lb-badge" src="{% static 'images/badges/' %}{{ row.badge_image }}" alt="{{ row.badge_name }}" title="{{ row.badge_name }}">
+            {% endif %}
+            </div>
+            {% empty %}
+            <div class="pf-lb-row pf-lb-empty"><span class="pf-lb-name">No respondents yet</span></div>
+            {% endfor %}
+        </div>
+        </div>
+
+      <!-- RIGHT — achievements + badges -->
+      <div class="pf-achieve-col">
+        <div class="pf-profile-name">
+          <span class="pf-name-ic">&#128100;</span>{{ display_name }}
+        </div>
+
+        <div class="pf-panel">
+          <div class="pf-panel-title">My Achievements</div>
+          <div class="pf-duo">
+            <div class="pf-stat-box">
+              <div class="pf-stat-label">Total Points earned from<br>completing surveys</div>
+              <div class="pf-stat-value">
+                <img src="{% static 'images/trophy.jpg' %}" class="pf-trophy-ic" alt="">
+                {{ total_points }} points
+                </div>
+            </div>
+            <div class="pf-stat-box">
+              <div class="pf-stat-label">Number of surveys<br>completed</div>
+              <div class="pf-stat-value">{{ survey_count }} surveys</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pf-panel">
+          <div class="pf-panel-title">My Badges</div>
+          <div class="pf-duo">
+            <div class="pf-badge-box">
+              <div class="pf-badge-cap">Your contribution has<br>earned you</div>
+              {% if earned_badge %}
+              <img class="pf-badge-img" src="{% static 'images/badges/' %}{{ earned_badge.image }}" alt="{{ earned_badge.name }}">
+              <div class="pf-badge-pill">{{ earned_badge.name }}</div>
+              {% else %}
+              <div class="pf-badge-pill">None yet</div>
+              {% endif %}
+            </div>
+            <div class="pf-badge-box">
+            {% if next_badge %}
+            <div class="pf-badge-cap">And you are on<br>your way to earn&#8230;</div>
+            <img class="pf-badge-img locked" src="{% static 'images/badges/' %}{{ next_badge.image }}" alt="{{ next_badge.name }}">
+            <div class="pf-badge-pill">{{ next_badge.name }}</div>
+            <div class="pf-badge-away">{{ next_badge.away }} points away</div>
+            <div class="pf-badge-progress">
+                <div class="pf-badge-progress-fill" style="width: {{ next_badge.progress }}%;"></div>
+            </div>
+            {% else %}
+            <div class="pf-badge-cap">You've earned<br>every badge!</div>
+            <div class="pf-badge-done">&#127881;</div>
+            {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

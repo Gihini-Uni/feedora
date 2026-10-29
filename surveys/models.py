@@ -121,6 +121,7 @@ class Response(models.Model):
                                       null=True, blank=True)
     points_earned = models.PositiveIntegerField(default=0)
     completed_at  = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(null=True, blank=True)
 
 
 class Answer(models.Model):

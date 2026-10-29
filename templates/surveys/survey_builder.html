@@ -55,7 +55,8 @@
         <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
       </svg>
     </button>
-    <button class="btn-publish" id="btnPublish">{% if edit_mode %}Re-Publish{% else %}Publish{% endif %}</button>
+        <button class="btn-discard" id="btnDiscard" type="button">Discard</button>
+        <button class="btn-publish" id="btnPublish">{% if edit_mode %}Re-Publish{% else %}Publish{% endif %}</button>
   </div>
 </header>
 
@@ -347,7 +348,9 @@
   "is_hmsam":        {% if is_hmsam %}true{% else %}false{% endif %},
   "hmsam_questions": {{ hmsam_questions_json|safe }},
   "save_url":        "{% if save_url %}{{ save_url }}{% else %}{% url 'create_survey' survey_type %}{% endif %}",
-  "csrf_token":      "{{ csrf_token }}"
+  "csrf_token":      "{{ csrf_token }}",
+  "edit_uuid":       "{% if edit_uuid %}{{ edit_uuid }}{% else %}{% endif %}",
+  "home_url":        "{% url 'my_surveys' %}"
 }
 </script>
 <script>
@@ -356,6 +359,8 @@
   const HMSAM_QUESTIONS = _d.hmsam_questions;
   const SAVE_URL        = _d.save_url;
   const CSRF_TOKEN      = _d.csrf_token;
+  const EDIT_UUID       = _d.edit_uuid || null;
+  const HOME_URL        = _d.home_url;
 
   function toggleAcc(id){ document.getElementById(id).classList.toggle('open'); }
 
@@ -405,17 +410,17 @@
 {% endif %}
 
 <!-- Unsaved-changes confirmation modal -->
-<div class="exit-modal-overlay" id="exitModalOverlay">
-  <div class="exit-modal" role="dialog" aria-modal="true" aria-labelledby="exitModalTitle">
-    <button class="exit-modal-close" id="exitModalClose" aria-label="Close">
+<div class="exit-modal-overlay" id="discardModalOverlay">
+  <div class="exit-modal" role="dialog" aria-modal="true" aria-labelledby="discardModalTitle">
+    <button class="exit-modal-close" id="discardModalClose" aria-label="Close">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
       </svg>
     </button>
-    <h2 class="exit-modal-title" id="exitModalTitle">Are you sure?</h2>
-    <p class="exit-modal-desc">If you leave now, you may lose your progress.</p>
-    <button class="exit-modal-btn exit-modal-btn-primary" id="exitModalConfirm">Yes, I'm sure</button>
-    <button class="exit-modal-btn exit-modal-btn-secondary" id="exitModalCancel">No, go back to the form</button>
+    <h2 class="exit-modal-title" id="discardModalTitle">Leave without saving changes?</h2>
+    <p class="exit-modal-desc">Your form will not be saved and won't appear in My surveys.</p>
+    <button class="exit-modal-btn exit-modal-btn-primary" id="discardConfirm">Yes, Discard</button>
+    <button class="exit-modal-btn exit-modal-btn-secondary" id="discardCancel">No, Continue with form</button>
   </div>
 </div>
 

@@ -67,17 +67,12 @@ class CreatorProfile(models.Model):
 
 class RespondentProfile(models.Model):
     GENDER_CHOICES = [
-        ('M',  'Male'),
-        ('F',  'Female'),
-        ('NB', 'Non-binary'),
-        ('NS', 'Prefer not to say'),
+        ('M', 'Male'), ('F', 'Female'),
+        ('NB', 'Non-binary'), ('NS', 'Prefer not to say'),
     ]
     AGE_CHOICES = [
-        ('under18', 'Under 18'),
-        ('18-24',   '18–24'),
-        ('25-34',   '25–34'),
-        ('35-44',   '35–44'),
-        ('45+',     '45+'),
+        ('under18', 'Under 18'), ('18-24', '18–24'),
+        ('25-34', '25–34'), ('35-44', '35–44'), ('45+', '45+'),
     ]
     user         = models.OneToOneField(User, on_delete=models.CASCADE,
                                         related_name='respondent_profile')
@@ -90,3 +85,4 @@ class RespondentProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.email} — Respondent"
+    

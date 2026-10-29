@@ -17,4 +17,5 @@ urlpatterns = [
     path('profile/creator/', views.creator_profile, name='creator_profile'),
     path('profile/respondent/', views.respondent_profile, name='respondent_profile'),
     path('profile/', views.my_profile, name='my_profile'),
+    path('profile/respondent/progress/', views.respondent_progress, name='respondent_progress'),
 ]

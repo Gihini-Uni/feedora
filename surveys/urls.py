@@ -22,4 +22,5 @@ urlpatterns = [
     path('<uuid:uid>/features/', views.add_features, name='add_features'),
     path('<uuid:uid>/edit/', views.edit_survey, name='edit_survey'),
     path('<uuid:uid>/delete/', views.delete_survey, name='delete_survey'),
+    path('ab-comparison/', views.ab_comparison, name='ab_comparison'),
 ]

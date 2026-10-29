@@ -11,6 +11,10 @@ from django.db import transaction
 from django.core.mail import send_mail
 from accounts.models import RespondentProfile
 from accounts.utils import get_level_info
+from django.utils import timezone
+from datetime import datetime
+from .ab_analytics import compare_surveys
+from accounts.utils import get_badges, get_level_info
 
 
 @login_required
@@ -239,36 +243,41 @@ def submit_response(request, uid):
     survey = get_object_or_404(Survey, access_uuid=uid, is_active=True)
     user = request.user if request.user.is_authenticated else None
 
-    # ── Read custom point values from survey features ──
+    # Enforce "limit to 1 response per user" (registered users only)
+    limit_one = (survey.features or {}).get('collection', {}).get('limit', False)
+    if limit_one and user and Response.objects.filter(survey=survey, user=user).exists():
+        return render(request, 'surveys/already_responded.html', {'survey': survey})
+
+    # Timing: read start time from session
+    start_iso  = request.session.get(f'start_{survey.id}')
+    started_at = datetime.fromisoformat(start_iso) if start_iso else None
+
+    # Read custom point values from survey features 
     features       = survey.features or {}
     points_config  = features.get('points', {})
     points_enabled = points_config.get('enabled', False)
     custom_values  = points_config.get('values', {})
 
-    # Default values — used if a type has no custom value set
     DEFAULT_POINTS = {
-        'likert':   10,
-        'rating':   10,
-        'mcq':      10,
-        'checkbox': 10,
-        'dropdown': 10,
-        'short':    10,
-        'open':     20,
-        'date':     5,
-        'file':     15,
+        'likert': 10, 'rating': 10, 'mcq': 10, 'checkbox': 10,
+        'dropdown': 10, 'short': 10, 'open': 20, 'date': 5, 'file': 15,
     }
 
     def pts(qtype, answer_text=''):
-        """Return points for a question type, honouring the creator's custom values."""
         if not points_enabled:
             return 0
         base = custom_values.get(qtype, DEFAULT_POINTS.get(qtype, 10))
-        # Detailed text answers (>20 chars) earn the 'open' value
         if qtype in ('short', 'open') and len(answer_text) > 20:
             base = custom_values.get('open', DEFAULT_POINTS['open'])
         return base
 
-    response_obj = Response.objects.create(survey=survey, user=user, points_earned=0)
+    # ── Create the Response ONCE, with started_at ──
+    response_obj = Response.objects.create(
+        survey=survey,
+        user=user,
+        points_earned=0,
+        started_at=started_at,
+    )
     total_points = 0
 
     for question in survey.questions.all().order_by('order'):
@@ -360,7 +369,24 @@ def submit_response(request, uid):
                 fail_silently=True,
             )
 
-    return render(request, 'surveys/thank_you.html', {'survey': survey, 'points': total_points})
+
+    earned_badge = None
+    show_badge = (survey.features or {}).get('badges', {}).get('show_earned', False)
+    if show_badge and user and user.is_authenticated:
+        earned, _ = get_badges(new_total)      # new_total = their cumulative points
+        level_info = get_level_info(new_total)
+        if earned:
+            earned_badge = {
+                'name':  earned['name'],
+                'image': earned['image'],
+                'title': level_info['title'],
+            }
+
+    return render(request, 'surveys/thank_you.html', {
+        'survey': survey,
+        'points': total_points,
+        'earned_badge': earned_badge,
+    })
 
 # This is the latest add_featutres part
 
@@ -384,7 +410,10 @@ def add_features(request, uid):
             survey.is_draft  = False
             survey.is_active = True
             survey.save()
-            return JsonResponse({'redirect': f'/surveys/{survey.access_uuid}/dashboard/'})
+            return JsonResponse({
+                'status': 'created',
+                'dashboard_url': f'/surveys/{survey.access_uuid}/dashboard/',
+            })
         else:
             survey.save()
             return JsonResponse({'status': 'ok'})
@@ -397,7 +426,17 @@ def add_features(request, uid):
     })
 
 def respond_survey(request, uid):
-    survey       = get_object_or_404(Survey, access_uuid=uid, is_active=True)
+    survey = get_object_or_404(Survey, access_uuid=uid, is_active=True)
+    
+    # Already-responded guard (registered users only)
+    limit_one = (survey.features or {}).get('collection', {}).get('limit', False)
+    if limit_one and request.user.is_authenticated and \
+       Response.objects.filter(survey=survey, user=request.user).exists():
+        return render(request, 'surveys/already_responded.html', {'survey': survey})
+    
+    start_key = f'start_{survey.id}'
+    if start_key not in request.session:
+        request.session[start_key] = timezone.now().isoformat()
     questions_qs = survey.questions.all().order_by('order')
     questions    = []
     seen_sections = set()
@@ -587,4 +626,15 @@ def edit_survey(request, uid):
 def delete_survey(request, uid):
     survey = get_object_or_404(Survey, access_uuid=uid, organization=request.user)
     survey.delete()
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
+        return JsonResponse({'status': 'deleted'})
     return redirect('my_surveys')
+
+
+@login_required
+def ab_comparison(request):
+    gamified = get_object_or_404(Survey, access_uuid=request.GET.get('a'), organization=request.user)
+    plain    = get_object_or_404(Survey, access_uuid=request.GET.get('b'), organization=request.user)
+    return render(request, 'surveys/ab_comparison.html', {
+        'r': compare_surveys(gamified, plain),
+    })

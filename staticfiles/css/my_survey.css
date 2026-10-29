@@ -1,0 +1,103 @@
+:root { --ink:#14140f; --ink-2:#6b6b62; --line:#ebebe4;
+            --bg:#fafaf7; --surface:#fff;
+            --serif:'Instrument Serif',serif; --sans:'Inter',sans-serif; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:var(--bg); font-family:var(--sans);
+           font-size:14px; color:var(--ink); }
+    .topbar { height:52px; background:var(--surface);
+              border-bottom:1px solid var(--line);
+              display:flex; align-items:center;
+              padding:0 24px; gap:12px; }
+    .brand { font-family:var(--serif); font-size:20px;
+             font-style:italic; color:var(--ink);
+             text-decoration:none; }
+    .btn { padding:7px 14px; border-radius:6px; font-size:13px;
+           font-weight:500; cursor:pointer; text-decoration:none;
+           display:inline-flex; align-items:center; gap:6px; }
+    .btn-dark { background:var(--ink); color:#fff; border:none; }
+    .btn-outline { background:transparent; color:var(--ink);
+                   border:1px solid var(--line); }
+    .page { max-width:760px; margin:2.5rem auto; padding:0 1.5rem 4rem; }
+    .page-header { display:flex; align-items:center;
+                   justify-content:space-between; margin-bottom:1.5rem; }
+    .page-title { font-family:var(--serif); font-size:28px;
+                  font-weight:400; }
+    .survey-grid { display:flex; flex-direction:column; gap:10px; }
+    
+    .survey-card-accent { width:4px; height:40px; border-radius:2px;
+                          background:var(--ink); flex-shrink:0; }
+    
+    .survey-card-title { font-weight:500; font-size:15px;
+                         margin-bottom:3px; }
+    .survey-card-meta { font-size:12px; color:var(--ink-2); }
+    .badge { font-size:11px; padding:2px 8px; border-radius:100px;
+             background:#14140f; color:#fff; }
+    .badge-muted { background:#f0f0e8; color:#6b6b62; }
+
+    /* Card row: card + actions side by side */
+    .survey-card-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding-right: 14px;
+      transition: box-shadow .15s;
+    }
+    .survey-card-wrap:hover { box-shadow: 0 4px 16px rgba(0,0,0,.07); }
+
+    /* Card sits inside the wrap now — strip its own border/bg */
+    .survey-card {
+        flex: 1;
+        min-width: 0;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        padding: 18px 22px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        text-decoration: none;
+        color: var(--ink);
+        }
+
+    .survey-card:hover { box-shadow: none; }
+
+    .survey-card-body { flex: 1; min-width: 0; }
+
+    /* Action buttons */
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .btn-edit,
+    .btn-delete {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 16px;
+      border-radius: 10px;
+      background: #322d5c;
+      color: #fff;
+      border: none;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 2px 6px rgba(50,45,92,.25);
+      transition: background .15s, transform .1s;
+    }
+    .btn-edit:hover,
+    .btn-delete:hover { background: #3f3970; }
+    .btn-edit:active,
+    .btn-delete:active { transform: translateY(1px); }
+    .btn-edit svg,
+    .btn-delete svg { flex-shrink: 0; }
+    .empty { text-align:center; padding:4rem 0; color:var(--ink-2); }
+    .empty h3 { font-family:var(--serif); font-size:22px;
+                margin-bottom:8px; color:var(--ink); }
+    .badge-draft { background:#fef9c3; color:#854d0e; }

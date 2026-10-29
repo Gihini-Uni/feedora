@@ -1,0 +1,535 @@
+/* Feedora — Profile Styles */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --brand-dark:    #1a1a1a;
+  --brand-olive:   #4a5c2f;
+  --brand-olive-h: #3a4a24;
+  --brand-muted:   #6b7280;
+  --brand-border:  #e5e7eb;
+  --brand-bg:      #f9f9f7;
+  --brand-surface: #ffffff;
+
+  --profile-tint:  #ede9fb;   /* soft lilac from the mockups */
+  --profile-tint-2:#f4f1fd;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 100px;
+
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --transition: 0.18s ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--brand-dark);
+  background: var(--brand-bg);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Top bar ─────────────────────────────────────────────── */
+.pf-topbar {
+  height: 56px;
+  background: var(--brand-surface);
+  border-bottom: 1px solid var(--brand-border);
+  display: flex;
+  align-items: center;
+  padding: 0 26px;
+}
+.pf-brand {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--brand-dark);
+  text-decoration: none;
+}
+.pf-topbar-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+
+/* ── Shell: sidebar + content ────────────────────────────── */
+.pf-shell {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  min-height: calc(100vh - 56px);
+}
+
+.pf-sidebar {
+  background: var(--profile-tint);
+  padding: 28px 18px;
+  border-right: 1px solid var(--brand-border);
+}
+.pf-nav { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.pf-nav a {
+  display: block;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--brand-dark);
+  text-decoration: none;
+  transition: background var(--transition);
+}
+.pf-nav a:hover { background: rgba(255,255,255,0.55); }
+.pf-nav a.active { background: var(--brand-surface); box-shadow: var(--shadow-card); }
+
+/* ── Content column ──────────────────────────────────────── */
+.pf-content {
+  background: var(--profile-tint-2);
+  padding: 40px 48px;
+}
+.pf-heading {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 400;
+  margin-bottom: 2px;
+}
+.pf-subheading {
+  font-size: 14px;
+  color: var(--brand-muted);
+  margin-bottom: 32px;
+}
+
+/* avatar + card sit side by side on wide screens */
+.pf-layout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+/* ── Avatar block ────────────────────────────────────────── */
+.pf-avatar-block { text-align: center; }
+.pf-avatar {
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  border: 2px solid var(--brand-dark);
+  background: var(--brand-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+  overflow: hidden;
+}
+.pf-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.pf-avatar svg { width: 68px; height: 68px; color: var(--brand-dark); }
+.pf-avatar-actions { font-size: 13px; }
+.pf-avatar-actions a { color: var(--brand-olive); text-decoration: none; font-weight: 500; }
+.pf-avatar-actions a:hover { text-decoration: underline; }
+.pf-avatar-actions .sep { color: var(--brand-muted); margin: 0 6px; }
+.pf-avatar-actions .muted { color: var(--brand-muted); }
+
+/* ── Info card ───────────────────────────────────────────── */
+.pf-card {
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 26px 30px;
+  position: relative;
+}
+.pf-card + .pf-card { margin-top: 20px; }
+
+.pf-card-edit {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-muted);
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition);
+}
+.pf-card-edit:hover { color: var(--brand-olive); border-color: var(--brand-olive); }
+
+/* two-column field grid */
+.pf-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px 40px;
+}
+.pf-field { display: flex; gap: 10px; align-items: flex-start; }
+.pf-field-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--brand-olive);
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.pf-field-body { min-width: 0; }
+.pf-field-label {
+  font-size: 12px;
+  color: var(--brand-muted);
+  margin-bottom: 1px;
+}
+.pf-field-value {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--brand-dark);
+  word-break: break-word;
+}
+.pf-field-value.email { text-decoration: underline; }
+.pf-field-value.add {
+  color: var(--brand-muted);
+  font-weight: 400;
+  cursor: pointer;
+}
+.pf-field-value.add:hover { color: var(--brand-olive); }
+
+/* divider between personal + org sections inside one card */
+.pf-card-divider {
+  border: 0;
+  border-top: 1px solid var(--brand-border);
+  margin: 24px 0;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .pf-shell { grid-template-columns: 1fr; }
+  .pf-sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--brand-border);
+    padding: 16px 18px;
+  }
+  .pf-nav { flex-direction: row; gap: 8px; }
+  .pf-content { padding: 28px 22px; }
+  .pf-layout { grid-template-columns: 1fr; gap: 26px; }
+  .pf-avatar-block { text-align: left; }
+  .pf-avatar { margin-left: 0; }
+}
+
+@media (max-width: 520px) {
+  .pf-fields { grid-template-columns: 1fr; gap: 18px; }
+  .pf-content { padding: 22px 16px; }
+  .pf-heading { font-size: 25px; }
+}
+
+/* ════════════════════════════════════════════════════════════
+   PROGRESS / ACHIEVEMENTS / BADGES  (My Progress tab)
+   ════════════════════════════════════════════════════════════ */
+
+/* Two-column split: progress+leaderboard | achievements+badges */
+.pf-progress-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 32px;
+  align-items: start;
+}
+
+/* ── Leaderboard column ──────────────────────────────────── */
+.pf-leaderboard-anim {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+.pf-leaderboard-card {
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 18px;
+}
+.pf-lb-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.pf-lb-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--brand-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.pf-lb-filter {
+  font-size: 11px;
+  color: var(--brand-muted);
+  background: var(--brand-bg);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  cursor: pointer;
+}
+.pf-lb-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--brand-bg);
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.pf-lb-row:last-child { margin-bottom: 0; }
+.pf-lb-row.is-me {
+  background: var(--profile-tint);
+  border: 1px solid var(--profile-tint);
+}
+.pf-lb-rank {
+  width: 16px;
+  color: var(--brand-muted);
+  font-size: 12px;
+}
+.pf-lb-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--brand-olive);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.pf-lb-name { flex: 1; color: var(--brand-dark); }
+.pf-lb-medal { font-size: 14px; }
+
+/* ── Achievements / badges column ────────────────────────── */
+.pf-profile-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 24px;
+  margin-bottom: 22px;
+}
+.pf-profile-name .pf-name-ic {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--brand-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+/* big rounded panel (achievements, badges) */
+.pf-panel {
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 24px 26px;
+}
+.pf-panel + .pf-panel { margin-top: 20px; }
+.pf-panel-title {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 400;
+  margin-bottom: 18px;
+}
+
+/* stat + badge shared 2-up grid */
+.pf-duo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.pf-stat-box {
+  background: var(--brand-bg);
+  border-radius: var(--radius-md);
+  padding: 18px 16px;
+  text-align: center;
+}
+.pf-stat-label {
+  font-size: 12px;
+  color: var(--brand-muted);
+  line-height: 1.45;
+  margin-bottom: 12px;
+}
+.pf-stat-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--brand-surface);
+  border-radius: var(--radius-pill);
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: var(--shadow-card);
+}
+
+.pf-badge-box {
+  background: var(--brand-bg);
+  border-radius: var(--radius-md);
+  padding: 18px 16px;
+  text-align: center;
+}
+.pf-badge-cap {
+  font-size: 12px;
+  color: var(--brand-muted);
+  line-height: 1.45;
+  margin-bottom: 14px;
+  min-height: 34px;
+}
+.pf-badge-img {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+  margin: 0 auto 12px;
+  display: block;
+}
+.pf-badge-img.locked { filter: grayscale(1); opacity: 0.45; }
+.pf-badge-pill {
+  display: inline-block;
+  background: var(--brand-surface);
+  border-radius: var(--radius-pill);
+  padding: 5px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: var(--shadow-card);
+}
+.pf-badge-away {
+  font-size: 11px;
+  color: var(--brand-muted);
+  margin-top: 8px;
+}
+.pf-badge-done { font-size: 40px; }
+
+/* ── Responsive for progress layout ──────────────────────── */
+@media (max-width: 860px) {
+  .pf-progress-layout { grid-template-columns: 1fr; gap: 26px; }
+}
+@media (max-width: 520px) {
+  .pf-duo { grid-template-columns: 1fr; }
+}
+
+/* empty leaderboard fallback */
+.pf-lb-empty .pf-lb-name { color: var(--brand-muted); }
+
+.pf-trophy-ic {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  border-radius: 3px;
+}
+
+.pf-badge-progress {
+  width: 80%;
+  height: 7px;
+  background: var(--brand-border);
+  border-radius: var(--radius-pill);
+  margin: 10px auto 0;
+  overflow: hidden;
+}
+.pf-badge-progress-fill {
+  height: 100%;
+  background: var(--brand-olive);
+  border-radius: var(--radius-pill);
+  transition: width 0.4s ease;
+}
+
+/* Podium */
+.pf-podium {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 6px;
+  margin-bottom: 18px;
+  min-height: 170px;
+}
+.pf-podium-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+.pf-podium-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 600;
+  font-size: 15px;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  margin-bottom: 8px;
+  background: var(--brand-olive);
+}
+.pf-podium-avatar.rank1 { background: #4b3f8f; width: 48px; height: 48px; }
+.pf-podium-avatar.rank2 { background: #6c8cff; }
+.pf-podium-avatar.rank3 { background: #3a3a3a; }
+.pf-podium-crown {
+  position: absolute;
+  top: -22px;
+  font-size: 18px;
+}
+.pf-podium-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 10px;
+  width: 54px;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 22px;
+  border-radius: 6px 6px 0 0;
+}
+.pf-bar-1 { height: 110px; background: #4b3f8f; }   /* tallest, middle */
+.pf-bar-2 { height: 80px;  background: #6c8cff; }
+.pf-bar-3 { height: 62px;  background: #6c8cff; }
+
+/* Badge beside name in rows */
+.pf-lb-badge {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* Animate bars growing up */
+.pf-podium-bar {
+  animation: growBar 0.8s cubic-bezier(0.34, 1.3, 0.64, 1) both;
+  transform-origin: bottom;
+}
+.pf-bar-1 { animation-delay: 0.1s; }
+.pf-bar-2 { animation-delay: 0.3s; }
+.pf-bar-3 { animation-delay: 0.5s; }
+
+@keyframes growBar {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+
+/* Avatars pop in after bars */
+.pf-podium-avatar {
+  animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: 0.7s;
+}
+.pf-podium-crown {
+  animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: 0.9s;
+}
+
+@keyframes popIn {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.pf-topbar-right{margin-left:auto;display:flex;gap:26px;align-items:center;}
+.pf-toplink{font-size:14px;font-weight:500;color:var(--brand-dark);text-decoration:none;}
+.pf-toplink:hover{color:var(--brand-olive);}

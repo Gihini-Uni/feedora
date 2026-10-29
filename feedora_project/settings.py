@@ -4,9 +4,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-*$9+bas)y6ow=9ryveu!(!0itxz25$etc#r5e834b$wr!#kr(7'
 
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['yourusername.pythonanywhere.com']
 
 
 # Apps 
@@ -152,15 +152,16 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'     # where collectstatic outputs to (for
 # Email 
 # During development this prints emails to terminal instead of sending them.
 # Verification code appears in the console when a user registers.
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # When ready to send real emails (e.g. on PythonAnywhere), swap to:
-# EMAIL_BACKEND = 'django.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'your@gmail.com'
-# EMAIL_HOST_PASSWORD = 'your-app-password'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'gihinilwaid@gmail.com'
+EMAIL_HOST_PASSWORD = 'rjch oaso fqxl gvlm'
+DEFAULT_FROM_EMAIL = 'Feedora <gihinilwaid@gmail.com>'
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

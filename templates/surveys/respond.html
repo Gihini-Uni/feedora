@@ -188,6 +188,17 @@
     .header-card,.q-card,.section-card{padding:20px 16px;}
     .topbar{padding:12px 16px;}
   }
+
+  .sound-toggle{
+    position: fixed; top: 64px; right: 20px; z-index: 1500;
+    width: 42px; height: 42px; border-radius: 50%;
+    background: #fff; border: 1px solid #e8e8e0;
+    font-size: 18px; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .15s;
+  }
+  .sound-toggle:hover{ transform: scale(1.08); }
 </style>
 </head>
 <body>
@@ -606,6 +617,8 @@ updateProgress();
   display: flex;
   align-items: flex-end;
   gap: 12px;
+  visibility: hidden;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
   {% if survey.features.mascot.position == 'bottom-right' %}
     bottom: 24px; right: 24px; flex-direction: row-reverse;
   {% elif survey.features.mascot.position == 'top-left' %}
@@ -614,12 +627,17 @@ updateProgress();
     top: 70px; right: 24px; flex-direction: row-reverse; align-items: flex-start;
   {% else %}
     bottom: 24px; left: 24px; flex-direction: row;
-  {% endif %}
+  {% endif %}  opacity: 0;
+}
+
+.mascot-wrap.visible{
+  opacity: 1;
+  visibility: visible;
 }
 /* FIX: bigger mascot */
 .mascot-img{
-  width: 120px;
-  height: auto;
+  width: 150px;
+  height: 150px;
   filter: drop-shadow(0 4px 16px rgba(0,0,0,0.18));
   cursor: pointer;
   transition: transform 0.3s;
@@ -661,11 +679,15 @@ updateProgress();
 }
 {% endif %}
  
-/* FIX: Custom exit modal — replaces browser "Leave site?" dialog */
+/* Custom exit modal — replaces browser "Leave site?" dialog */
 .mascot-exit-modal{
-  position: fixed; inset: 0; z-index: 1000;
-  background: rgba(0,0,0,0.45);
-  display: flex; align-items: center; justify-content: center;
+  position: fixed;
+  inset: 0;
+  background: rgba(20,20,15,0.45);
+  display: none;              /* JS flips this to flex */
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
   padding: 20px;
 }
 .mascot-exit-box{
@@ -698,24 +720,31 @@ updateProgress();
  
 
 <!--greeting animation-->
-<div id="mascotWrap" class="mascot-wrap">
+<div id="mascotWrap" class="mascot-wrap" data-mascot="{{ survey.features.mascot.name|default:'mochi' }}">
+  {% if survey.features.mascot.name == 'kato' %}
+  <dotlottie-wc id="mascotLottie" src="{% static 'animations/kato_hi.lottie' %}"
+                autoplay loop class="mascot-img"></dotlottie-wc>
+  {% else %}
   <img id="mascotImg" src="{% static 'images/mascot/greeting_cat.png' %}" alt="Mascot" class="mascot-img">
-  <!--
-  <dotlottie-wc
-    id="mascotImg"
-    src="https://lottie.host/dee79f6e-c511-432b-837a-18a19793e93a/kEjiCMU0pq.lottie"
-    class="mascot-img"
-    style="width:120px; height:120px;"
-    autoplay
-    loop>
-  </dotlottie-wc>--> <!--use this later for more dynamic animation-->
+  {% endif %}
   <div class="mascot-bubble" id="mascotBubble"></div>
 </div>
+
+{% if survey.features.mascot.sound_enabled %}
+<button id="soundToggle" class="sound-toggle" title="Toggle sound" aria-pressed="true">
+  <span class="sound-on">🔊</span><span class="sound-off" style="display:none;">🔇</span>
+</button>
+{% endif %}
  
 <!-- Custom exit modal with sad cat -->
 <div class="mascot-exit-modal" id="exitModal" style="display:none;">
   <div class="mascot-exit-box">
+    {% if survey.features.mascot.name == 'kato' %}
+    <dotlottie-wc src="{% static 'animations/kato_sad.lottie' %}" autoplay loop
+              class="modal-cat" style="width:150px;height:150px;"></dotlottie-wc>
+    {% else %}
     <img src="{% static 'images/mascot/sad_cat.png' %}" alt="" class="modal-cat">
+    {% endif %}
     <div class="modal-title">Are you sure you want to leave?</div>
     <p class="modal-text">
       Your feedback is valuable for both us and future users like you.
@@ -728,27 +757,63 @@ updateProgress();
     </div>
   </div>
 </div>
+
  
 <script>
 (function(){
-  const img = document.getElementById('mascotImg');
+  const wrap   = document.getElementById('mascotWrap');
   const bubble = document.getElementById('mascotBubble');
   const modal  = document.getElementById('exitModal');
-  if (!img) return;
- 
-  const BASE = "{% static 'images/mascot/' %}";
-  const IMGS = {
-    greeting:  BASE + 'greeting_cat.png',
-    encourage: BASE + 'encourage_cat.png',
-    sad:       BASE + 'sad_cat.png',
-    thanks:    BASE + 'thank_you_cat.png',
+  if (!wrap) return;
+
+  const MASCOT = wrap.dataset.mascot || 'mochi';      // 'mochi' (Nicki) or 'kato'
+  const IMG    = document.getElementById('mascotImg');     // exists for Nicki
+  const LOTTIE = document.getElementById('mascotLottie');  // exists for Kato
+
+  const PNG  = "{% static 'images/mascot/' %}";
+  const ANIM = "{% static 'animations/' %}";
+
+  // trigger key → source for each mascot
+  const SRC = {
+    mochi: {
+      greeting:  PNG + 'greeting_cat.png',
+      encourage: PNG + 'encourage_cat.png',
+      sad:       PNG + 'sad_cat.png',
+      thanks:    PNG + 'thank_you_cat.png',
+    },
+    kato: {
+      greeting:  ANIM + 'kato_hi.lottie',
+      encourage: ANIM + 'kato_halfway.lottie',
+      sad:       ANIM + 'kato_sad.lottie',
+      thanks:    ANIM + 'kato_thank-you.lottie',
+    },
   };
- 
+
+  function setMascotSource(key){
+    const src = (SRC[MASCOT] && SRC[MASCOT][key]) || SRC[MASCOT].greeting;
+    if (MASCOT === 'kato' && LOTTIE){
+      LOTTIE.setAttribute('src', src);
+    } else if (IMG){
+      IMG.src = src;
+    }
+  }
+
+  let hideTimer = null;
+
   function showMsg(text, imgKey, duration){
-    img.src = IMGS[imgKey] || IMGS.greeting;
+    setMascotSource(imgKey);
     bubble.textContent = text;
     bubble.classList.add('show');
-    if (duration) setTimeout(() => bubble.classList.remove('show'), duration);
+    wrap.classList.add('visible');          // show whole mascot
+    if (window.playSound) window.playSound('ping');
+
+    clearTimeout(hideTimer);
+    if (duration){
+      hideTimer = setTimeout(() => {
+        bubble.classList.remove('show');
+        wrap.classList.remove('visible');   // hide whole mascot
+      }, duration);
+    }
   }
  
   // 1. Entry greeting
@@ -788,7 +853,7 @@ updateProgress();
     }
   });
  
-  // FIX: Intercept all link clicks to show custom modal instead
+  // Intercept all link clicks to show custom modal instead
   document.addEventListener('click', function(e){
     const link = e.target.closest('a[href]');
     if (!link) return;
@@ -814,7 +879,7 @@ updateProgress();
     else window.history.back();
   });
  
-  // FIX: Submit button — set allowLeave BEFORE form submits
+  // Submit button — set allowLeave BEFORE form submits
   // This prevents both the exit modal AND the beforeunload dialog
   const form = document.getElementById('surveyForm');
   if (form){
@@ -868,8 +933,57 @@ updateProgress();
   updateLabel();
 })();
 </script>
+
 {% endif %}
 {% endwith %}
+
+{% if survey.features.mascot.sound_enabled %}
+<script>
+(function(){
+  const BASE = "{% static 'sounds/' %}";
+  const SOUNDS = {
+    ping:   new Audio(BASE + 'ping.mp3'),
+    popper: new Audio(BASE + 'popper.mp3'),
+    click:  new Audio(BASE + 'click.mp3'),
+  };
+  // preload + volume
+  Object.values(SOUNDS).forEach(a => { a.preload = 'auto'; a.volume = 0.5; });
+
+  // respondent's local on/off (defaults ON)
+  let soundOn = true;
+
+  // expose globally so other scripts (mascot, thank-you) can call it
+  window.playSound = function(name){
+    if (!soundOn) return;
+    const a = SOUNDS[name];
+    if (!a) return;
+    try {
+      a.currentTime = 0;
+      a.play().catch(() => {});   // silently ignore autoplay blocks
+    } catch(e){}
+  };
+
+  // toggle button
+  const btn = document.getElementById('soundToggle');
+  if (btn){
+    btn.addEventListener('click', () => {
+      soundOn = !soundOn;
+      btn.querySelector('.sound-on').style.display  = soundOn ? '' : 'none';
+      btn.querySelector('.sound-off').style.display = soundOn ? 'none' : '';
+      btn.setAttribute('aria-pressed', soundOn);
+      if (soundOn) window.playSound('click');   // feedback that it's back on
+    });
+  }
+
+  // click sound on all buttons (delegated)
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('button, .opt-item, .btn, a.done-btn')) {
+      window.playSound('click');
+    }
+  });
+})();
+</script>
+{% endif %}
 
 </body>
 </html>

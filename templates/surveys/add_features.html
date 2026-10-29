@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 {% load static %}
+<script type="module" src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.10/dist/dotlottie-wc.js"></script>
 <style>
 :root{
   --ink:#14140f;--ink-2:#6b6b62;--ink-3:#a3a39a;
@@ -71,6 +72,9 @@ body{font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--bg
 .mascot-face{font-size:32px;margin-bottom:6px;}
 .mascot-name{font-size:12px;font-weight:500;color:var(--ink);}
 .mascot-opt.selected .mascot-name{color:var(--purple);}
+.mascot-slideshow{width:70px;height:70px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.mascot-slideshow img{width:100%;height:100%;object-fit:contain;animation:mascotFade .4s ease;}
+@keyframes mascotFade{from{opacity:0;}to{opacity:1;}}
 .coming-tag{font-size:10px;color:var(--ink-3);background:var(--hover);padding:1px 6px;border-radius:100px;margin-top:3px;display:inline-block;}
 .pos-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;max-width:240px;}
 .pos-btn{padding:7px 10px;background:var(--hover);border:1px solid var(--line);border-radius:7px;font-size:12px;color:var(--ink-2);cursor:pointer;text-align:center;}
@@ -96,8 +100,8 @@ body{font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--bg
 .pts-input{width:60px;border:1px solid var(--line);border-radius:5px;padding:4px 8px;font-size:13px;text-align:center;font-family:var(--sans);outline:none;}
 .pts-input:focus{border-color:var(--purple);}
 .badge-row{display:flex;gap:10px;flex-wrap:wrap;}
-.badge-card{border:1px solid var(--line);border-radius:8px;padding:12px 16px;flex:1;min-width:100px;text-align:center;}
-.badge-icon{font-size:28px;margin-bottom:6px;}
+.badge-card{border:1px solid var(--line);border-radius:8px;padding:12px 16px;flex:1;min-width:90px;text-align:center;}
+.badge-img{width:46px;height:46px;object-fit:contain;margin:0 auto 6px;display:block;}
 .badge-name{font-size:12px;font-weight:500;color:var(--ink);margin-bottom:2px;}
 .badge-rule{font-size:11px;color:var(--ink-3);line-height:1.4;}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);}
@@ -118,6 +122,15 @@ body{font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--bg
 .save-btn:hover{opacity:0.85;}
 .save-toast{display:inline-flex;align-items:center;gap:6px;margin-left:12px;font-size:12px;color:var(--green);opacity:0;transition:opacity 0.3s;}
 .save-toast.show{opacity:1;}
+.publish-modal{position:fixed;inset:0;background:rgba(20,20,15,0.45);display:none;align-items:center;justify-content:center;z-index:3000;padding:20px;}
+.publish-modal[style*="flex"]{display:flex;}
+.publish-modal-box{background:#fff;border-radius:16px;padding:32px 30px 26px;max-width:380px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.18);}
+.publish-icon{width:56px;height:56px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+.publish-title{font-size:22px;font-weight:700;color:#14140f;margin:0 0 8px;}
+.publish-text{font-size:14px;color:#6b6b62;line-height:1.5;margin:0 0 22px;}
+.publish-btns{display:flex;flex-direction:column;gap:10px;}
+.pub-btn-primary{display:block;padding:12px;border-radius:10px;background:#14140f;color:#fff;text-decoration:none;font-size:14px;font-weight:600;cursor:pointer;border:none;}
+.pub-btn-primary:hover{opacity:.88;}
 </style>
 </head>
 <body>
@@ -169,13 +182,28 @@ body{font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--bg
         </div>
         <div class="feat-body" id="body-mascot">
           <div class="sub-label">Choose your mascot</div>
-          <div class="mascot-grid">
+                    <div class="mascot-grid">
             <div class="mascot-opt selected" data-mascot="mochi" onclick="selectMascot(this)">
-              <div class="mascot-face">🐱</div><div class="mascot-name">Nicki</div>
+              <div class="mascot-slideshow" data-show="mochi">
+                <img src="{% static 'images/mascot/greeting_cat.png' %}" alt="Nicki">
+              </div>
+              <div class="mascot-name">Nicki</div>
               <div class="mascot-sel" style="font-size:11px;color:var(--purple);margin-top:2px;">Selected</div>
             </div>
-            <div class="mascot-opt coming"><div class="mascot-face"></div><div class="mascot-name">Kato</div><div class="coming-tag">Coming soon</div></div>
-            <div class="mascot-opt coming"><div class="mascot-face"></div><div class="mascot-name">Beep</div><div class="coming-tag">Coming soon</div></div>
+
+            <div class="mascot-opt" data-mascot="kato" onclick="selectMascot(this)">
+              <div class="mascot-slideshow" data-show="kato">
+                <dotlottie-wc src="{% static 'animations/kato_hi.lottie' %}" autoplay loop
+                              style="width:100%;height:100%;"></dotlottie-wc>
+              </div>
+              <div class="mascot-name">Kato</div>
+              <div class="mascot-sel" style="font-size:11px;color:var(--purple);margin-top:2px;"></div>
+            </div>
+
+            <div class="mascot-opt coming">
+              <div class="mascot-face"></div><div class="mascot-name">Beep</div>
+              <div class="coming-tag">Coming soon</div>
+            </div>
           </div>
           <div class="sub-label">Position on form</div>
           <div class="pos-grid" id="posGrid">
@@ -184,6 +212,16 @@ body{font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--bg
             <div class="pos-btn active" onclick="setPos(this,'bottom-left')">Bottom left</div>
             <div class="pos-btn" onclick="setPos(this,'bottom-right')">Bottom right</div>
           </div>
+
+          <div class="sub-label" style="margin-top:18px;">Sound Effects Option</div>
+          <div class="toggle-row">
+            <div>
+              <div class="tr-title">Enable sound effects option</div>
+              <div class="tr-desc">Give respondents an on/off control for mascot pings, button clicks, and the thank-you sound</div>
+            </div>
+            <div class="toggle" id="toggle-sound" onclick="toggleSound(this)"></div>
+          </div>
+
           <div class="sub-label" style="margin-top:16px;">Messages</div>
           <div class="msg-list">
             <div class="msg-row"><div class="msg-trigger">On entry</div>"Hey guys! Let's get started 🎉"</div>
@@ -263,9 +301,34 @@ body{font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--bg
         </div>
         <div class="feat-body" id="body-badges">
           <div class="badge-row">
-            <div class="badge-card"><div class="badge-icon">🥉</div><div class="badge-name">Bronze</div><div class="badge-rule">First-time respondent</div></div>
-            <div class="badge-card"><div class="badge-icon">🥈</div><div class="badge-name">Silver</div><div class="badge-rule">5 responses total</div></div>
-            <div class="badge-card"><div class="badge-icon">🥇</div><div class="badge-name">Gold</div><div class="badge-rule">More than 5 responses</div></div>
+            <div class="badge-card">
+              <img src="{% static 'images/badges/badge_new_voice.png' %}" class="badge-img" alt="New Voice">
+              <div class="badge-name">New Voice</div><div class="badge-rule">0+ points</div>
+            </div>
+            <div class="badge-card">
+              <img src="{% static 'images/badges/badge_contributor.png' %}" class="badge-img" alt="Contributor">
+              <div class="badge-name">Contributor</div><div class="badge-rule">100+ points</div>
+            </div>
+            <div class="badge-card">
+              <img src="{% static 'images/badges/badge_active.png' %}" class="badge-img" alt="Active Member">
+              <div class="badge-name">Active Member</div><div class="badge-rule">300+ points</div>
+            </div>
+            <div class="badge-card">
+              <img src="{% static 'images/badges/badge_trusted.png' %}" class="badge-img" alt="Trusted">
+              <div class="badge-name">Trusted Respondent</div><div class="badge-rule">600+ points</div>
+            </div>
+            <div class="badge-card">
+              <img src="{% static 'images/badges/badge_champion.png' %}" class="badge-img" alt="Champion">
+              <div class="badge-name">Community Champion</div><div class="badge-rule">1000+ points</div>
+            </div>
+          </div>
+
+          <div class="toggle-row" style="margin-top:14px;">
+            <div>
+              <div class="tr-title">Show earned badge on completion</div>
+              <div class="tr-desc">Let registered users view the badge and title they earned on the thank-you page, based on their total points</div>
+            </div>
+            <div class="toggle" id="toggle-show-badge" onclick="toggleShowBadge(this)"></div>
           </div>
         </div>
       </div>
@@ -326,16 +389,34 @@ body{font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--bg
     </div>
   </main>
 </div>
+
+<div class="publish-modal" id="createdModal" style="display:none;">
+  <div class="publish-modal-box">
+    <div class="publish-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+           stroke="#16a34a" stroke-width="2.5" stroke-linecap="round">
+        <polyline points="20,6 9,17 4,12"/>
+      </svg>
+    </div>
+    <h2 class="publish-title">Form published!</h2>
+    <p class="publish-text">The form is published and is ready for responses.</p>
+    <div class="publish-btns">
+      <a href="#" class="pub-btn-primary" id="createdOkBtn">OK</a>
+    </div>
+  </div>
+</div>
+
 <script id="savedFeatures" type="application/json">{{ features_json|default:'{}'|safe }}</script>
 <script>
 const SURVEY_UUID='{{ survey.access_uuid }}';
 const CSRF_TOKEN='{{ csrf_token }}';
 const IS_DRAFT={{ survey.is_draft|yesno:'true,false' }};
 const DEFAULTS={
-  mascot:{enabled:false,name:'mochi',position:'bottom-left'},
+  mascot:{enabled:false,name:'mochi',position:'bottom-left',sound_enabled:false},
   progress:{enabled:false,style:'solid',color:'#7A4FA8',label:'percent'},
   points:{enabled:false,values:{likert:10,mcq:10,checkbox:10,short:10,open:20,date:5,file:15}},
-  badges:{enabled:false},voucher:{enabled:false,code:'',discount:''},
+  badges:{enabled:false, show_earned:false},
+  voucher:{enabled:false,code:'',discount:''},
   collection:{email:false,savecopy:false,emailcopy:false,limit:false,accept:true},
   dashboard:{enabled:true,alpha:true,hmsam:true,responses:true,leaderboard:true,byquestion:true,individual:true},
 };
@@ -345,6 +426,7 @@ for(const k in DEFAULTS)state[k]=Object.assign({},DEFAULTS[k],saved[k]||{});
 document.addEventListener('DOMContentLoaded',applyStateToUI);
 function applyStateToUI(){
   applyToggle('toggle-mascot','card-mascot',state.mascot.enabled);
+  applyToggle('toggle-sound','', state.mascot.sound_enabled);
   document.querySelectorAll('.pos-btn').forEach(b=>{const m=b.getAttribute('onclick')?.match(/'([^']+)'/);if(m)b.classList.toggle('active',m[1]===state.mascot.position);});
   applyToggle('toggle-progress','card-progress',state.progress.enabled);
   setOpt('#progStyleOpts',state.progress.style);
@@ -354,6 +436,8 @@ function applyStateToUI(){
   const pv=state.points.values||{};
   ['likert','mcq','checkbox','short','open','date','file'].forEach(k=>{const el=document.getElementById('pts-'+k);if(el&&pv[k]!==undefined)el.value=pv[k];});
   applyToggle('toggle-badges','card-badges',state.badges.enabled);
+  applyToggle('toggle-badges','card-badges',state.badges.enabled);
+  document.getElementById('toggle-show-badge')?.classList.toggle('on', state.badges.show_earned); 
   applyToggle('toggle-voucher','card-voucher',state.voucher.enabled);
   setVal('voucherCode',state.voucher.code||'');setVal('voucherDiscount',state.voucher.discount||'');
   const c=state.collection;
@@ -370,6 +454,10 @@ function applyStateToUI(){
   });
   updateNavDots();
 }
+function toggleShowBadge(el){
+  state.badges.show_earned = !state.badges.show_earned;
+  el.classList.toggle('on', state.badges.show_earned);
+}
 function applyToggle(tid,cid,on){const t=document.getElementById(tid),c=document.getElementById(cid);if(t)setTogEl(t,on);if(c)c.classList.toggle('enabled',on);}
 function setOpt(sel,val){document.querySelectorAll(sel+' .prog-opt').forEach(b=>{const m=b.getAttribute('onclick')?.match(/'([^']+)'/);if(m)b.classList.toggle('active',m[1]===val);});}
 function setTog(id,on){const e=document.getElementById(id);if(e)setTogEl(e,on);}
@@ -380,6 +468,10 @@ function showPanel(id,el){document.querySelectorAll('.section-panel').forEach(p=
 function toggleFeature(id,el){el.classList.toggle('on');const on=el.classList.contains('on');document.getElementById('card-'+id)?.classList.toggle('enabled',on);document.querySelector('.nav-item[data-target="'+id+'"]')?.classList.toggle('feat-on',on);state[id]=state[id]||{};state[id].enabled=on;}
 function selectMascot(el){if(el.classList.contains('coming'))return;document.querySelectorAll('.mascot-opt').forEach(o=>{o.classList.remove('selected');const s=o.querySelector('.mascot-sel');if(s)s.textContent='';});el.classList.add('selected');const s=el.querySelector('.mascot-sel');if(s)s.textContent='Selected';state.mascot.name=el.dataset.mascot;}
 function setPos(el,pos){document.querySelectorAll('.pos-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');state.mascot.position=pos;}
+function toggleSound(el){
+  state.mascot.sound_enabled = !state.mascot.sound_enabled;
+  el.classList.toggle('on', state.mascot.sound_enabled);
+}
 function setProg(el,style){el.closest('.prog-opts').querySelectorAll('.prog-opt').forEach(b=>b.classList.remove('active'));el.classList.add('active');state.progress.style=style;}
 function setProgColor(el){document.querySelectorAll('#progColorRow .color-dot').forEach(d=>d.classList.remove('active'));el.classList.add('active');state.progress.color=el.dataset.color;}
 function setProgLabel(el,val){el.closest('.prog-opts').querySelectorAll('.prog-opt').forEach(b=>b.classList.remove('active'));el.classList.add('active');state.progress.label=val;}
@@ -396,13 +488,49 @@ async function saveFeatures(publish=false){
   state.voucher.code=document.getElementById('voucherCode')?.value||'';
   state.voucher.discount=document.getElementById('voucherDiscount')?.value||'';
   state.collection={email:document.getElementById('toggle-email')?.classList.contains('on')||false,savecopy:document.getElementById('toggle-savecopy')?.classList.contains('on')||false,emailcopy:document.getElementById('toggle-emailcopy')?.classList.contains('on')||false,limit:document.getElementById('toggle-limit')?.classList.contains('on')||false,accept:document.getElementById('toggle-accept')?.classList.contains('on')!==false};
-  try{
+    try{
     const res=await fetch('/surveys/'+SURVEY_UUID+'/features/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':CSRF_TOKEN},body:JSON.stringify({action:publish?'publish':'save',features:state})});
     const data=await res.json();
-    if(data.redirect){window.location.href=data.redirect;}
+    if(data.status==='created'){
+      const modal=document.getElementById('createdModal');
+      const ok=document.getElementById('createdOkBtn');
+      if(ok) ok.href=data.dashboard_url;
+      if(modal) modal.style.display='flex';
+    }
+    else if(data.redirect){window.location.href=data.redirect;}
     else if(res.ok){const t=document.getElementById('saveToast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);updateNavDots();updateAcceptStatus(document.getElementById('toggle-accept'));}
-  }catch(err){console.error(err);}
+    }catch(err){console.error(err);}
 }
+
+(function(){
+  const STATIC = "{% static 'images/mascot/' %}";
+  const ANIM   = "{% static 'animations/' %}";
+
+  // Nicki cycles her 4 PNGs; Kato cycles his 4 lottie animations
+  const SLIDES = {
+    mochi: [STATIC+'greeting_cat.png', STATIC+'encourage_cat.png',
+            STATIC+'sad_cat.png',      STATIC+'thank_you_cat.png'],
+    kato:  [ANIM+'kato_hi.lottie',     ANIM+'kato_halfway.lottie',
+            ANIM+'kato_sad.lottie',    ANIM+'kato_thank-you.lottie'],
+  };
+  const idx = { mochi:0, kato:0 };
+
+  function cycle(which){
+    const box = document.querySelector('.mascot-slideshow[data-show="'+which+'"]');
+    if (!box) return;
+    idx[which] = (idx[which]+1) % SLIDES[which].length;
+    const src = SLIDES[which][idx[which]];
+    if (which === 'mochi'){
+      const img = box.querySelector('img');
+      if (img){ img.style.animation='none'; img.offsetHeight; img.style.animation=''; img.src = src; }
+    } else {
+      const wc = box.querySelector('dotlottie-wc');
+      if (wc) wc.setAttribute('src', src);
+    }
+  }
+  setInterval(() => { cycle('mochi'); cycle('kato'); }, 2000);
+})();
+
 </script>
 </body>
 </html>

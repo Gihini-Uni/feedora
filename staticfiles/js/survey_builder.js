@@ -4,6 +4,7 @@ let sections         = [];
 let accentColor      = '#14140f';
 let bgColor          = '#fafaf7';
 let qFont            = "'Inter',sans-serif";
+let headerFont = "'Instrument Serif',serif"; 
 let previewTab       = null;
 let headerImageBase64= null;
 
@@ -88,18 +89,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const secIdx = sectionTitles.indexOf(q.sectionTitle);
       const sec    = secIdx >= 0 ? sections[secIdx] : sections[0];
       return {
-        id:           'q' + i,
-        sectionId:    sec.id,
-        text:         q.text          || '',
-        code:         q.code          || '',
-        type:         q.type          || 'mcq',
-        construct:    q.construct      || null,
-        required:     q.required      !== false,
-        options:      q.options        || [],
-        ratingMax:    q.ratingMax      || 5,
-        ratingStyle:  q.ratingStyle    || 'stars',
-        sectionTitle: q.sectionTitle   || '',
-        sectionNum:   q.sectionNum     || 1,
+        id: 'q' + i,
+        dbId: q.id || null,
+        sectionId: sec.id,
+        text: q.text || '',
+        code: q.code || '',
+        type: q.type || 'mcq',
+        construct: q.construct || null,
+        required: q.required !== false,
+        options: q.options || [],
+        ratingMax: q.ratingMax || 5,
+        ratingStyle: q.ratingStyle || 'stars',
+        sectionTitle: q.sectionTitle || '',
+        sectionNum: q.sectionNum || 1,
       };
     });
 
@@ -137,10 +139,107 @@ document.addEventListener('DOMContentLoaded', () => {
   bindPreview();
   document.querySelector('.topbar-tab[data-action="features"]')
     ?.addEventListener('click', saveAsDraft);
+
+  // ── Restore theme AFTER bindPanel so UI reflects saved values ──
+  if (window.PREFILL){
+
+    // Accent colour
+    if (window.PREFILL.accent){
+      accentColor = window.PREFILL.accent;
+      applyAccent(accentColor);
+      document.querySelectorAll('.swatches[data-target="accent"] .swatch').forEach(s => {
+        s.classList.toggle('active', s.dataset.color === accentColor);
+      });
+    }
+
+    // Background
+    if (window.PREFILL.bg){
+      bgColor = window.PREFILL.bg;
+      const canvas = document.querySelector('.canvas');
+      if (canvas) canvas.style.background = bgColor;
+      document.querySelectorAll('#bgSeg .seg-item').forEach(b => {
+        b.classList.toggle('active', b.dataset.bg === bgColor);
+      });
+    }
+
+    // Button colour
+    if (window.PREFILL.btnColor){
+      btnColor = window.PREFILL.btnColor;
+      document.documentElement.style.setProperty('--btn-bg', btnColor);
+      const p = document.getElementById('btnPreview');
+      if (p){ p.style.background = btnColor; p.style.color = '#fff'; p.style.border = 'none'; }
+      document.querySelectorAll('.swatches[data-target="btncolor"] .swatch').forEach(s => {
+        s.classList.toggle('active', s.dataset.color === btnColor);
+      });
+    }
+
+    // Button radius
+    if (window.PREFILL.btnRadius){
+      btnRadius = window.PREFILL.btnRadius;
+      const p = document.getElementById('btnPreview');
+      if (p) p.style.borderRadius = btnRadius + 'px';
+      document.querySelectorAll('#shapeRow .seg-item').forEach(b => {
+        b.classList.toggle('active', b.dataset.radius === btnRadius);
+      });
+    }
+
+    // Submit label
+    if (window.PREFILL.submitLabel){
+      const btnTextEl = document.getElementById('btnText');
+      if (btnTextEl) btnTextEl.value = window.PREFILL.submitLabel;
+      const btnPreview = document.getElementById('btnPreview');
+      if (btnPreview) btnPreview.textContent = window.PREFILL.submitLabel;
+    }
+
+    // Header image
+    if (window.PREFILL.headerImage){
+      headerImageBase64 = window.PREFILL.headerImage;
+      const imgEl   = document.getElementById('headerImg');
+      const imgWrap = document.getElementById('headerImgWrap');
+      const imgName = document.getElementById('imgFilename');
+      if (imgEl)   imgEl.src = headerImageBase64;
+      if (imgWrap) imgWrap.style.display = 'block';
+      if (imgName) imgName.textContent = 'Saved image';
+    }
+
+    // Title and description (also set after renderAll in case formTitle
+    // element is created dynamically)
+    if (window.PREFILL.title){
+      const t = document.getElementById('formTitle');
+      if (t) t.value = window.PREFILL.title;
+    }
+    if (window.PREFILL.description){
+      const d = document.getElementById('formDesc');
+      if (d) d.value = window.PREFILL.description;
+    }
+
+    // Question font
+    if (window.PREFILL.qFont){
+      qFont = window.PREFILL.qFont;
+      document.querySelectorAll('.q-title-input').forEach(el => {
+        el.style.fontFamily = qFont;
+      });
+      document.querySelectorAll('#qFontList .font-row').forEach(r => {
+        r.classList.toggle('active', r.dataset.font === qFont);
+      });
+    }
+
+    // Header font
+    if (window.PREFILL.headerFont){
+      headerFont = window.PREFILL.headerFont;
+      const ft = document.getElementById('formTitle');
+      if (ft) ft.style.fontFamily = headerFont;
+      document.querySelectorAll('#headerFontList .font-row').forEach(r => {
+        r.classList.toggle('active', r.dataset.font === headerFont);
+      });
+    }
+  }
+
 });
 
 // ── History ────────────────────────────────────────────────
 function saveHistory(){
+  window.markBuilderDirty?.(); 
   const snap = JSON.stringify({ questions, sections });
   undoStack = undoStack.slice(0, undoIdx + 1);
   undoStack.push(snap);
@@ -668,6 +767,7 @@ function bindPanel(){
     r.addEventListener('click', () => {
       document.querySelectorAll('#headerFontList .font-row').forEach(x=>x.classList.remove('active'));
       r.classList.add('active');
+      headerFont = r.dataset.font; 
       const ft = document.getElementById('formTitle');
       if (ft) ft.style.fontFamily = r.dataset.font;
     });
@@ -817,16 +917,8 @@ function applyAccent(color){
 }
 
 // ── Publish ────────────────────────────────────────────────
-function bindPublish(){
-  document.getElementById('btnPublish')?.addEventListener('click', function () {
-    console.log('Publish clicked');
-  });
-}
-
-async function saveAsDraft(){
-  const st = document.getElementById('saveStatus');
-  st.textContent = 'Saving…';
-
+function buildPayload(action){
+  // Sync DOM state into the questions array
   document.querySelectorAll('.q-row').forEach(row => {
     const idx = parseInt(row.dataset.idx);
     if (isNaN(idx)) return;
@@ -834,9 +926,8 @@ async function saveAsDraft(){
     if (!q) return;
     if (OPTION_TYPES.includes(q.type)){
       q.options = [...row.querySelectorAll('.opt-text')]
-      .map(i => i.value.trim())
-      .filter(Boolean);
-        }
+        .map(i => i.value.trim()).filter(Boolean);
+    }
     if (q.type === 'rating'){
       const inp = row.querySelector('.rating-max-input');
       if (inp) q.ratingMax = parseInt(inp.value)||5;
@@ -852,8 +943,8 @@ async function saveAsDraft(){
     });
   });
 
-  const payload = {
-    action:       'draft',
+  return {
+    action:       action,
     title:        document.getElementById('formTitle').value.trim()||'Untitled Survey',
     description:  document.getElementById('formDesc').value.trim(),
     theme_accent: accentColor,
@@ -864,14 +955,68 @@ async function saveAsDraft(){
     btn_radius:   btnRadius,
     btn_padding:  btnPadding,
     btn_font_size:btnFontSize,
+    q_font:       qFont,
+    header_font:  headerFont,
     questions: questions.map(q=>({
-      text:q.text, code:q.code||'', type:q.type,
-      construct:q.construct||'', required:q.required!==false,
-      options:q.options||[], ratingMax:q.ratingMax||5,
-      ratingStyle:q.ratingStyle||'stars',
-      sectionTitle:q.sectionTitle||'', sectionNum:q.sectionNum||1,
+      id:           q.dbId || null,
+      text:         q.text,
+      code:         q.code||'',
+      type:         q.type,
+      construct:    q.construct||'',
+      required:     q.required!==false,
+      options:      q.options||[],
+      ratingMax:    q.ratingMax||5,
+      ratingStyle:  q.ratingStyle||'stars',
+      sectionTitle: q.sectionTitle||'',
+      sectionNum:   q.sectionNum||1,
     })),
   };
+}
+
+function bindPublish(){
+  document.getElementById('btnPublish')?.addEventListener('click', publishSurvey);
+}
+
+async function publishSurvey(){
+  const st = document.getElementById('saveStatus');
+  if (st) st.textContent = 'Publishing…';
+
+  const payload = buildPayload('publish');
+
+  try {
+    const res = await fetch(SAVE_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRFToken':CSRF_TOKEN},
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+
+    if (data.status === 'created'){
+      window.clearBuilderDirty?.();
+      showCreatedModal(data.dashboard_url);
+      if (st) st.textContent = '';
+    } else if (data.status === 'published'){
+      window.clearBuilderDirty?.();
+      showPublishModal(data.dashboard_url);
+      if (st) st.textContent = '';
+    } else if (data.redirect){
+      window.clearBuilderDirty?.();
+      window.location.href = data.redirect;
+    } else {
+      if (st) st.textContent = 'Error — please try again.';
+    }
+
+  } catch(err){
+    if (st) st.textContent = 'Network error.';
+    console.error(err);
+  }
+}
+
+async function saveAsDraft(){
+  const st = document.getElementById('saveStatus');
+  if (st) st.textContent = 'Saving…';
+
+  const payload = buildPayload('draft');
 
   try {
     const res = await fetch(SAVE_URL, {
@@ -881,12 +1026,13 @@ async function saveAsDraft(){
     });
     const data = await res.json();
     if (data.redirect){
+      window.clearBuilderDirty?.();
       window.location.href = data.redirect;
     } else {
-      st.textContent = 'Error — please try again.';
+      if (st) st.textContent = 'Error — please try again.';
     }
   } catch(err){
-    st.textContent = 'Network error.';
+    if (st) st.textContent = 'Network error.';
     console.error(err);
   }
 }
@@ -896,4 +1042,134 @@ function esc(s){
   return String(s||'')
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Unsaved-changes exit guard ─────────────────────────────
+(function(){
+  let builderDirty = false;
+  let pendingHref  = null;
+
+  // Expose a setter so other parts of the app (e.g. saveHistory,
+  // swatch/font pickers) can mark the form dirty.
+  window.markBuilderDirty = () => { builderDirty = true; };
+  window.clearBuilderDirty = () => { builderDirty = false; };
+
+  // Delegated input listener on document — survives re-renders of
+  // formTitle / sectionsContainer, and covers dynamically created fields.
+  document.addEventListener('input', e => {
+    if (e.target.closest('#sectionsContainer, #formTitle, #formDesc, #surveyNameInput, #mainCanvas')){
+      builderDirty = true;
+    }
+  });
+  // Cover clicks on swatches, fonts, toggles, add/delete buttons, etc.
+  document.addEventListener('change', e => {
+    if (e.target.closest('#mainCanvas, .panel, #sectionsContainer')){
+      builderDirty = true;
+    }
+  });
+
+  // Clear the flag whenever a draft is saved.
+  if (typeof window.saveAsDraft === 'function'){
+    const _orig = window.saveAsDraft;
+    window.saveAsDraft = async function(){ builderDirty = false; return _orig.apply(this, arguments); };
+  } else if (typeof saveAsDraft === 'function'){
+    try {
+      const _orig = saveAsDraft;
+      window.saveAsDraft = async function(){ builderDirty = false; return _orig.apply(this, arguments); };
+    } catch(err){ console.warn('saveAsDraft wrap skipped:', err); }
+  }
+
+  const overlay    = document.getElementById('exitModalOverlay');
+  const btnClose   = document.getElementById('exitModalClose');
+  const btnConfirm = document.getElementById('exitModalConfirm');
+  const btnCancel  = document.getElementById('exitModalCancel');
+
+  function openModal(href){ pendingHref = href; overlay?.classList.add('show'); }
+  function closeModal(){ pendingHref = null; overlay?.classList.remove('show'); }
+
+  btnConfirm?.addEventListener('click', () => {
+    builderDirty = false;
+    const href = pendingHref;
+    closeModal();
+    if (href) window.location.href = href;
+  });
+  btnCancel?.addEventListener('click', closeModal);
+  btnClose ?.addEventListener('click', closeModal);
+  overlay  ?.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && overlay?.classList.contains('show')) closeModal();
+  });
+
+  document.addEventListener('click', e => {
+    const link = e.target.closest('a[href]');
+    if (!link || !builderDirty) return;
+    const href = link.getAttribute('href');
+    if (!href || href.startsWith('#') || link.target === '_blank') return;
+    e.preventDefault();
+    openModal(href);
+  });
+
+  window.addEventListener('beforeunload', e => {
+    if (builderDirty){ e.preventDefault(); e.returnValue = ''; }
+  });
+})();
+
+// ── Discard draft ──────────────────────────────────────────
+(function(){
+  const btn     = document.getElementById('btnDiscard');
+  const overlay = document.getElementById('discardModalOverlay');
+  const confirm = document.getElementById('discardConfirm');
+  const cancel  = document.getElementById('discardCancel');
+  const close   = document.getElementById('discardModalClose');
+  if (!btn || !overlay) return;
+
+  const open  = () => overlay.classList.add('show');
+  const shut  = () => overlay.classList.remove('show');
+
+  btn.addEventListener('click', open);
+  cancel?.addEventListener('click', shut);
+  close ?.addEventListener('click', shut);
+  overlay.addEventListener('click', e => { if (e.target === overlay) shut(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && overlay.classList.contains('show')) shut();
+  });
+
+  confirm?.addEventListener('click', async () => {
+    // stop the unsaved-changes guard from double-prompting
+    window.clearBuilderDirty?.();
+
+    // If a draft/survey row already exists (edit mode, or came back from
+    // Add features), delete it so it never shows in My surveys.
+    if (typeof EDIT_UUID !== 'undefined' && EDIT_UUID){
+      try {
+        await fetch(`/surveys/${EDIT_UUID}/delete/`, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': CSRF_TOKEN, 'X-Requested-With': 'XMLHttpRequest' },
+        });
+      } catch(err){ console.error('discard delete failed', err); }
+    }
+    // Brand-new survey with no row yet → nothing to delete, just leave.
+    window.location.href = (typeof HOME_URL !== 'undefined' && HOME_URL) ? HOME_URL : '/';
+  });
+})();
+
+// - Publish modals
+
+function showPublishModal(dashboardUrl){
+  const modal = document.getElementById('publishModal');
+  const btn   = document.getElementById('goToSurveyBtn');
+  if (btn) btn.href = dashboardUrl;
+  if (modal) modal.style.display = 'flex';
+}
+
+function showCreatedModal(dashboardUrl){
+  const modal = document.getElementById('createdModal');
+  const btn   = document.getElementById('createdOkBtn');
+  if (btn) btn.href = dashboardUrl;
+  if (modal) modal.style.display = 'flex';
+}
+
+function closePublishModal(){
+  const modal = document.getElementById('publishModal');
+  if (modal) modal.style.display = 'none';
 }

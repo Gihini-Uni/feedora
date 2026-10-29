@@ -6,13 +6,15 @@ from django.core.mail import send_mail
 from .models import User, Organization, EmailVerificationCode, CreatorProfile, RespondentProfile
 from django.db.models import Sum, Count
 from surveys.models import Survey, Response
-from .utils import get_level_info
+from .utils import get_level_info, get_badges
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from .models import Organization, CreatorProfile, RespondentProfile
 from django.contrib.auth import logout
 from django.shortcuts import redirect
 from django.views.decorators.cache import never_cache
+
+
 
 
 # ── Role selection ─────────────────────────────────────────
@@ -191,10 +193,11 @@ from django.contrib.auth.decorators import login_required
 def dashboard(request):
     return render(request, 'accounts/creator_home.html')
 
+
 @login_required
 @never_cache
 def respondent_home(request):
-    return render(request, 'accounts/respondent_profile.html')
+    return render(request, 'accounts/respondent_home.html')
 
 
 @login_required
@@ -239,39 +242,108 @@ def respondent_profile(request):
         profile.save()
         return redirect('respondent_profile')
 
-    # Recalculate total points from responses
+    # Recalculate total points from actual responses
     total = Response.objects.filter(
         user=request.user
     ).aggregate(t=Sum('points_earned'))['t'] or 0
-
     if profile.total_points != total:
         profile.total_points = total
         profile.save(update_fields=['total_points'])
 
-    responses = Response.objects.filter(
-        user=request.user
-    ).select_related('survey').order_by('-completed_at')
+    survey_count = Response.objects.filter(user=request.user).count()
+    earned_badge, next_badge = get_badges(total)
 
-    # Points grouped by the creator's company
-    points_by_company = {}
-    for r in responses:
-        try:
-            company = r.survey.organization.creator_profile.company or 'Independent'
-        except CreatorProfile.DoesNotExist:
-            company = 'Independent'
-        points_by_company[company] = points_by_company.get(company, 0) + r.points_earned
+    # Leaderboard — top 5 by total points
+    leaderboard = (
+        RespondentProfile.objects
+        .select_related('user')
+        .order_by('-total_points')[:5]
+    )
 
-    points_by_company = sorted(points_by_company.items(),
-                               key=lambda x: x[1], reverse=True)
+    lb = []
+    for rank, p in enumerate(leaderboard, start=1):
+        name = p.display_name or (p.user.get_full_name().strip() or p.user.email.split('@')[0])
+        earned, _ = get_badges(p.total_points)   # that person's own badge
+        lb.append({
+            'rank':         rank,
+            'name':         name,
+            'points':       p.total_points,
+            'is_me':        p.user_id == request.user.id,
+            'initial':      name[0].upper() if name else '?',
+            'avatar':       p.avatar,
+            'badge_image':  earned['image'] if earned else None,
+            'badge_name':   earned['name']  if earned else '',
+        })
+
+    # Split for template — top 3 go on the podium
+    podium = lb[:3]
 
     return render(request, 'accounts/respondent_profile.html', {
-        'profile':           profile,
-        'responses':         responses,
-        'response_count':    responses.count(),
-        'points_by_company': points_by_company,
-        'level':             get_level_info(total),
+        'profile':       profile,
+        'display_name':  profile.display_name or request.user.email.split('@')[0],
+        'total_points':  total,
+        'survey_count':  survey_count,
+        'level':         get_level_info(total),
+        'earned_badge':  earned_badge,
+        'next_badge':    next_badge,
+        'leaderboard':   lb,
     })
 
+ 
+@login_required
+def respondent_progress(request):
+    """My Progress tab — leaderboard, achievements, badges."""
+    profile, _ = RespondentProfile.objects.get_or_create(user=request.user)
+
+    # Recalculate total points from actual responses
+    total = Response.objects.filter(
+        user=request.user
+    ).aggregate(t=Sum('points_earned'))['t'] or 0
+    if profile.total_points != total:
+        profile.total_points = total
+        profile.save(update_fields=['total_points'])
+
+    survey_count = Response.objects.filter(user=request.user).count()
+    earned_badge, next_badge = get_badges(total)
+
+    # Leaderboard — top 5 by total points
+    leaderboard = (
+        RespondentProfile.objects
+        .select_related('user')
+        .order_by('-total_points')[:5]
+    )
+    lb = []
+    for rank, p in enumerate(leaderboard, start=1):
+        name = p.display_name or (p.user.get_full_name().strip() or p.user.email.split('@')[0])
+        earned, _ = get_badges(p.total_points)      # that person's own badge
+        lb.append({
+            'rank':        rank,
+            'name':        name,
+            'points':      p.total_points,
+            'is_me':       p.user_id == request.user.id,
+            'initial':     name[0].upper() if name else '?',
+            'avatar':      p.avatar,
+            'badge_image': earned['image'] if earned else None,
+            'badge_name':  earned['name']  if earned else '',
+        })
+
+    podium = lb[:3]        # ← top 3 for the podium
+
+    display_name = (request.user.get_full_name().strip()
+                    or request.user.email.split('@')[0])
+
+    return render(request, 'accounts/respondent_progress.html', {
+        'profile':       profile,
+        'active_tab':    'progress',
+        'display_name':  display_name,
+        'total_points':  total,
+        'survey_count':  survey_count,
+        'level':         get_level_info(total),
+        'earned_badge':  earned_badge,
+        'next_badge':    next_badge,
+        'leaderboard':   lb,
+        'podium':        podium,      
+    })
 
 @login_required
 @never_cache

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>A/B Comparison — Feedora</title>
+{% load static %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --ink:#14140f;--ink-2:#6b6b62;--ink-3:#a3a39a;
+  --line:#e8e8e0;--surface:#fff;--hover:#f4f4ee;--bg:#fafaf7;
+  --purple:#7A4FA8;--purple-light:#f0eef8;
+  --green:#16a34a;--green-light:#dcfce7;
+  --amber:#d97706;--amber-light:#fef3c7;
+  --gray:#9ca3af;
+  --serif:'Instrument Serif',Georgia,serif;--sans:'Inter',system-ui,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;}
+.topbar{height:52px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 24px;}
+.brand{font-family:var(--serif);font-size:20px;color:var(--ink);text-decoration:none;}
+.wrap{max-width:1000px;margin:0 auto;padding:32px 24px 60px;}
+.page-title{font-family:var(--serif);font-size:30px;font-weight:400;margin-bottom:4px;}
+.page-sub{font-size:14px;color:var(--ink-2);margin-bottom:24px;}
+
+/* caution banner */
+.caution{background:var(--amber-light);border:1px solid #fcd34d;border-radius:10px;
+         padding:14px 18px;margin-bottom:24px;font-size:13px;color:#92400e;line-height:1.5;
+         display:flex;gap:10px;align-items:flex-start;}
+.caution svg{flex-shrink:0;margin-top:1px;}
+
+/* survey labels */
+.labels{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+.label-card{border-radius:10px;padding:16px 18px;}
+.label-card.gam{background:var(--purple-light);border:1px solid #d8d4f0;}
+.label-card.plain{background:var(--hover);border:1px solid var(--line);}
+.label-tag{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;}
+.label-card.gam .label-tag{color:var(--purple);}
+.label-card.plain .label-tag{color:var(--ink-2);}
+.label-title{font-size:14px;font-weight:500;color:var(--ink);}
+.label-n{font-size:12px;color:var(--ink-2);margin-top:2px;}
+
+/* results table */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0;margin-bottom:24px;overflow:hidden;}
+.card-head{padding:16px 20px;border-bottom:1px solid var(--line);font-size:13px;font-weight:600;color:var(--ink);}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th,td{padding:12px 20px;text-align:left;border-bottom:1px solid var(--line);}
+th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--ink-3);background:var(--bg);}
+tr:last-child td{border-bottom:none;}
+.metric-name{font-weight:500;color:var(--ink);}
+.col-gam{color:var(--purple);font-weight:600;}
+.col-plain{color:var(--ink);font-weight:600;}
+.col-diff{font-weight:500;}
+.diff-pos{color:var(--green);}
+.diff-neg{color:#dc2626;}
+.diff-zero{color:var(--ink-3);}
+.verdict{font-size:11px;padding:3px 10px;border-radius:100px;font-weight:500;display:inline-block;}
+.v-sig{background:var(--green-light);color:#166534;}
+.v-trend{background:var(--amber-light);color:#92400e;}
+.v-no{background:var(--hover);color:var(--ink-2);}
+.v-na{background:var(--hover);color:var(--ink-3);}
+
+/* charts */
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;}
+.chart-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;}
+.chart-title{font-size:13px;font-weight:600;margin-bottom:14px;}
+.chart-box{height:220px;}
+
+.note{font-size:12px;color:var(--ink-3);line-height:1.6;margin-top:8px;}
+@media(max-width:720px){.labels,.charts{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<header class="topbar"><a href="/" class="brand">Feedora</a></header>
+
+<div class="wrap">
+  <h1 class="page-title">A/B Comparison</h1>
+  <p class="page-sub">Gamified vs non-gamified survey — engagement and completion analysis</p>
+
+  <!-- Small-sample caution -->
+  {% if r.small_sample %}
+  <div class="caution">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    <div>
+      <strong>Preliminary results — interpret with caution.</strong>
+      One or both groups have fewer than 30 completed responses
+      ({{ r.a.completed }} vs {{ r.b.completed }}).
+      Statistical tests have low power at this sample size, so treat differences as
+      indicative trends rather than confirmed findings. Effect sizes below remain
+      informative regardless of sample size.
+    </div>
+  </div>
+  {% endif %}
+
+  {% if not r.scipy_available %}
+  <div class="caution">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <div>{{ r.scipy_note }} — showing descriptive statistics and effect sizes only.</div>
+  </div>
+  {% endif %}
+
+  <!-- Survey labels -->
+  <div class="labels">
+    <div class="label-card gam">
+      <div class="label-tag">Group A — Gamified</div>
+      <div class="label-title">{{ r.a.survey_title }}</div>
+      <div class="label-n">{{ r.a.completed }} completed / {{ r.a.started }} started</div>
+    </div>
+    <div class="label-card plain">
+      <div class="label-tag">Group B — Plain</div>
+      <div class="label-title">{{ r.b.survey_title }}</div>
+      <div class="label-n">{{ r.b.completed }} completed / {{ r.b.started }} started</div>
+    </div>
+  </div>
+
+  <!-- Results table -->
+  <div class="card">
+    <div class="card-head">Comparison metrics</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Gamified (A)</th>
+          <th>Plain (B)</th>
+          <th>Difference</th>
+          <th>Significance</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="metric-name">Completion rate</td>
+          <td class="col-gam">{{ r.a.completion_rate }}%</td>
+          <td class="col-plain">{{ r.b.completion_rate }}%</td>
+          <td class="col-diff {% if r.effect.completion_diff > 0 %}diff-pos{% elif r.effect.completion_diff < 0 %}diff-neg{% else %}diff-zero{% endif %}">
+            {% if r.effect.completion_diff > 0 %}+{% endif %}{{ r.effect.completion_diff }} pts
+          </td>
+          <td>
+            {% if 'significant (p' in r.completion_verdict %}<span class="verdict v-sig">Significant</span>
+            {% elif 'trend' in r.completion_verdict %}<span class="verdict v-trend">Trend</span>
+            {% elif 'Not enough' in r.completion_verdict %}<span class="verdict v-na">No data</span>
+            {% else %}<span class="verdict v-no">Not significant</span>{% endif %}
+            {% if r.p_completion is not None %}<div class="note">p = {{ r.p_completion }}</div>{% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td class="metric-name">Median completion time</td>
+          <td class="col-gam">{{ r.a.median_time_disp }}</td>
+          <td class="col-plain">{{ r.b.median_time_disp }}</td>
+          <td class="col-diff {% if r.effect.median_time_diff > 0 %}diff-pos{% elif r.effect.median_time_diff < 0 %}diff-neg{% else %}diff-zero{% endif %}">
+            {% if r.effect.median_time_diff > 0 %}+{% endif %}{{ r.effect.median_time_diff }} min
+          </td>
+          <td>
+            {% if 'significant (p' in r.time_verdict %}<span class="verdict v-sig">Significant</span>
+            {% elif 'trend' in r.time_verdict %}<span class="verdict v-trend">Trend</span>
+            {% elif 'Not enough' in r.time_verdict %}<span class="verdict v-na">No data</span>
+            {% else %}<span class="verdict v-no">Not significant</span>{% endif %}
+            {% if r.p_time is not None %}<div class="note">p = {{ r.p_time }}</div>{% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td class="metric-name">Mean completion time</td>
+          <td class="col-gam">{{ r.a.mean_time_disp }}</td>
+          <td class="col-plain">{{ r.b.mean_time_disp }}</td>
+          <td class="col-diff diff-zero">—</td>
+          <td><span class="verdict v-na">Descriptive</span></td>
+        </tr>
+        <tr>
+          <td class="metric-name">Avg. response text length</td>
+          <td class="col-gam">{{ r.a.avg_text_len }} chars</td>
+          <td class="col-plain">{{ r.b.avg_text_len }} chars</td>
+          <td class="col-diff {% if r.effect.text_len_diff > 0 %}diff-pos{% elif r.effect.text_len_diff < 0 %}diff-neg{% else %}diff-zero{% endif %}">
+            {% if r.effect.text_len_diff > 0 %}+{% endif %}{{ r.effect.text_len_diff }}
+          </td>
+          <td><span class="verdict v-na">Descriptive</span></td>
+        </tr>
+        <tr>
+          <td class="metric-name">Avg. points earned</td>
+          <td class="col-gam">{{ r.a.avg_points }}</td>
+          <td class="col-plain">{{ r.b.avg_points }}</td>
+          <td class="col-diff diff-zero">—</td>
+          <td><span class="verdict v-na">Descriptive</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts">
+    <div class="chart-card">
+      <div class="chart-title">Completion rate (%)</div>
+      <div class="chart-box"><canvas id="completionChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Median completion time (seconds)</div>
+      <div class="chart-box"><canvas id="timeChart"></canvas></div>
+    </div>
+  </div>
+
+  <p class="note">
+    Completion time is measured as elapsed time from form load to submission and may include idle periods.
+    Median is reported as the headline figure to reduce the influence of outliers.
+    Points are calculated for both groups but only displayed to respondents in the gamified version.
+  </p>
+
+</div>
+
+<script>
+const gamColor   = '#7A4FA8';
+const plainColor = '#9ca3af';
+
+new Chart(document.getElementById('completionChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Gamified', 'Plain'],
+    datasets: [{
+      data: [{{ r.a.completion_rate }}, {{ r.b.completion_rate }}],
+      backgroundColor: [gamColor, plainColor],
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } }
+  }
+});
+
+new Chart(document.getElementById('timeChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Gamified', 'Plain'],
+    datasets: [{
+      data: [{{ r.a.median_time_sec }}, {{ r.b.median_time_sec }}],
+      backgroundColor: [gamColor, plainColor],
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, ticks: { callback: v => v + 's' } } }
+  }
+});
+</script>
+</body>
+</html>

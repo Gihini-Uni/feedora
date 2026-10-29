@@ -11,14 +11,18 @@
 
 <div class="pf-topbar">
   <a href="/" class="pf-brand">Feedora</a>
+  <div class="pf-topbar-right">
+    <a href="{% url 'respondent_home' %}" class="pf-toplink">Fill surveys</a>
+    <a href="{% url 'home' %}" class="pf-toplink">Home</a>
+  </div>
 </div>
 
 <div class="pf-shell">
 
   <aside class="pf-sidebar">
     <ul class="pf-nav">
-      <li><a href="#" class="active">My profile</a></li>
-      <li><a href="#">Achievements</a></li>
+      <li><a href="{% url 'respondent_profile' %}" class="{% if active_tab == 'profile' %}active{% endif %}">My profile</a></li>
+      <li><a href="{% url 'respondent_progress' %}" class="{% if active_tab == 'progress' %}active{% endif %}">My Progress</a></li>
     </ul>
   </aside>
 
@@ -55,7 +59,7 @@
             <svg class="pf-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
             <div class="pf-field-body">
               <div class="pf-field-label">First Name</div>
-              <div class="pf-field-value">{{ user.first_name|default:"&mdash;" }}</div>
+              <div class="pf-field-value">{{ user.first_name|default:"—" }}</div>
             </div>
           </div>
 
@@ -63,7 +67,7 @@
             <svg class="pf-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
             <div class="pf-field-body">
               <div class="pf-field-label">Last Name</div>
-              <div class="pf-field-value">{{ user.last_name|default:"&mdash;" }}</div>
+              <div class="pf-field-value">{{ user.last_name|default:"—" }}</div>
             </div>
           </div>
 
@@ -71,7 +75,7 @@
             <svg class="pf-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
             <div class="pf-field-body">
               <div class="pf-field-label">Email address</div>
-              <div class="pf-field-value email">{{ user.email|default:"&mdash;" }}</div>
+              <div class="pf-field-value email">{{ user.email|default:"—" }}</div>
             </div>
           </div>
 
@@ -100,34 +104,14 @@
           </div>
 
           <div class="pf-field">
-            <svg class="pf-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+            <svg class="pf-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21V7l9-4 9 4v14"/><path d="M9 21v-6h6v6"/></svg>
             <div class="pf-field-body">
-              <div class="pf-field-label">Country / Region</div>
-              {% if organization.country %}
-                <div class="pf-field-value">{{ organization.country }}</div>
+              <div class="pf-field-label">Company / workplace</div>
+              {% if profile.company %}
+                <div class="pf-field-value">{{ profile.company }}</div>
               {% else %}
                 <div class="pf-field-value add" onclick="editPersonal()">Add &rsaquo;</div>
               {% endif %}
-            </div>
-          </div>
-        </div>
-
-        <hr class="pf-card-divider">
-
-        <div class="pf-fields">
-          <div class="pf-field">
-            <svg class="pf-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21V7l9-4 9 4v14"/><path d="M9 21v-6h6v6"/></svg>
-            <div class="pf-field-body">
-              <div class="pf-field-label">Organization / institution name</div>
-              <div class="pf-field-value">{{ organization.org_name|default:"&mdash;" }}</div>
-            </div>
-          </div>
-
-          <div class="pf-field">
-            <svg class="pf-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6M9 13h6"/></svg>
-            <div class="pf-field-body">
-              <div class="pf-field-label">Organization type</div>
-              <div class="pf-field-value">{{ organization.get_org_type_display|default:"&mdash;" }}</div>
             </div>
           </div>
         </div>
@@ -139,11 +123,11 @@
 
 <script>
   function editPersonal(){
-    // Add edit profile function later 
-    window.location.href = "";
+    // TODO: build edit form (modal or dedicated edit page that POSTs to respondent_profile)
     console.log('edit profile');
   }
   document.getElementById('addImageBtn')?.addEventListener('click', e => e.preventDefault());
+  document.getElementById('removeImageBtn')?.addEventListener('click', e => e.preventDefault());
 </script>
 </body>
 </html>

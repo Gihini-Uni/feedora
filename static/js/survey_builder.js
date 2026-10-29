@@ -1114,6 +1114,45 @@ function esc(s){
   });
 })();
 
+// ── Discard draft ──────────────────────────────────────────
+(function(){
+  const btn     = document.getElementById('btnDiscard');
+  const overlay = document.getElementById('discardModalOverlay');
+  const confirm = document.getElementById('discardConfirm');
+  const cancel  = document.getElementById('discardCancel');
+  const close   = document.getElementById('discardModalClose');
+  if (!btn || !overlay) return;
+
+  const open  = () => overlay.classList.add('show');
+  const shut  = () => overlay.classList.remove('show');
+
+  btn.addEventListener('click', open);
+  cancel?.addEventListener('click', shut);
+  close ?.addEventListener('click', shut);
+  overlay.addEventListener('click', e => { if (e.target === overlay) shut(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && overlay.classList.contains('show')) shut();
+  });
+
+  confirm?.addEventListener('click', async () => {
+    // stop the unsaved-changes guard from double-prompting
+    window.clearBuilderDirty?.();
+
+    // If a draft/survey row already exists (edit mode, or came back from
+    // Add features), delete it so it never shows in My surveys.
+    if (typeof EDIT_UUID !== 'undefined' && EDIT_UUID){
+      try {
+        await fetch(`/surveys/${EDIT_UUID}/delete/`, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': CSRF_TOKEN, 'X-Requested-With': 'XMLHttpRequest' },
+        });
+      } catch(err){ console.error('discard delete failed', err); }
+    }
+    // Brand-new survey with no row yet → nothing to delete, just leave.
+    window.location.href = (typeof HOME_URL !== 'undefined' && HOME_URL) ? HOME_URL : '/';
+  });
+})();
+
 // - Publish modals
 
 function showPublishModal(dashboardUrl){
