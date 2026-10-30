@@ -2,11 +2,13 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-*$9+bas)y6ow=9ryveu!(!0itxz25$etc#r5e834b$wr!#kr(7'
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
-DEBUG = False
-
-ALLOWED_HOSTS = ['yourusername.pythonanywhere.com']
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'dev-only-insecure-key-change-me')
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
+ALLOWED_HOSTS = ['gihiniw.pythonanywhere.com', '127.0.0.1', 'localhost']
 
 
 # Apps 
@@ -160,7 +162,7 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'gihinilwaid@gmail.com'
-EMAIL_HOST_PASSWORD = 'rjch oaso fqxl gvlm'
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD', '')
 DEFAULT_FROM_EMAIL = 'Feedora <gihinilwaid@gmail.com>'
 
 
