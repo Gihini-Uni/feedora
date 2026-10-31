@@ -44,6 +44,7 @@ const CONSTRUCT_LABELS = {
   joy:'Joy', curiosity:'Curiosity', control:'Control',
   fi:'Focused Immersion', biu:'Behavioural Intention to Use',
 };
+const HMSAM_MIN_PER_CONSTRUCT = 3;
 
 // ── Init ───────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -419,7 +420,7 @@ function buildCard(q, idx){
         ${typeSel}
       </div>
       <div class="q-card-body">${buildBody(q)}</div>
-      <div class="q-card-foot">
+            <div class="q-card-foot">
         ${!IS_HMSAM ? `
           <button class="q-icon-btn q-dup" title="Duplicate">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -427,6 +428,7 @@ function buildCard(q, idx){
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
             </svg>
           </button>
+        ` : ''}
           <button class="q-icon-btn q-del" title="Delete">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="3,6 5,6 21,6"/>
@@ -434,7 +436,6 @@ function buildCard(q, idx){
             </svg>
           </button>
           <div class="foot-div"></div>
-        ` : ''}
         <div class="q-req-toggle">
           <span>Required</span>
           <div class="toggle ${q.required !== false ? 'on' : ''}"></div>
@@ -452,7 +453,24 @@ function buildCard(q, idx){
     saveHistory();
   });
   row.querySelector('.q-del')?.addEventListener('click', () => {
-    questions.splice(idx, 1); saveHistory(); renderAll();
+    if (IS_HMSAM) {
+      const c = questions[idx].construct;
+      if (c) {
+        const countInConstruct = questions.filter(q => q.construct === c).length;
+        if (countInConstruct <= HMSAM_MIN_PER_CONSTRUCT) {
+          alert('You must keep at least ' + HMSAM_MIN_PER_CONSTRUCT +
+                ' questions for each HMSAM construct.\n\n' +
+                (CONSTRUCT_LABELS[c] || c) + ' currently has ' + countInConstruct +
+                '. Removing more would distort the HMSAM score for this construct.');
+          return;
+        }
+      }
+    }
+    questions.splice(idx, 1);
+    renumberHmsamCodes();        // ← renumber after delete
+    saveHistory();
+    renderAll();
+    if (IS_HMSAM) renderConstructList();
   });
   row.querySelector('.q-dup')?.addEventListener('click', () => {
     const c = JSON.parse(JSON.stringify(questions[idx]));
@@ -718,11 +736,31 @@ function renderConstructList(){
   questions.forEach(q => {
     if (q.construct) counts[q.construct]=(counts[q.construct]||0)+1;
   });
-  el.innerHTML = Object.entries(counts).map(([k,n])=>`
+  el.innerHTML = Object.entries(counts).map(([k,n])=>{
+    const atMin = n <= 3;
+    return `
     <div class="construct-row">
       <span style="color:#6b6b62;">${CONSTRUCT_LABELS[k]||k}</span>
-      <span class="c-count">${n}</span>
-    </div>`).join('');
+      <span class="c-count" style="${atMin ? 'color:#b45309;font-weight:700;' : ''}">${n}${atMin ? ' (min)' : ''}</span>
+    </div>`;
+  }).join('');
+}
+
+function renumberHmsamCodes(){
+  if (!IS_HMSAM) return;
+  // Map construct key → code prefix (PEU, PU, JOY, CUR, CTR, IMM, BIU)
+  const PREFIX = {
+    peou: 'PEU', pu: 'PU', joy: 'JOY', curiosity: 'CUR',
+    control: 'CTR', fi: 'IMM', biu: 'BIU',
+  };
+  const counters = {};
+  // Walk questions in their current order, renumber within each construct
+  questions.forEach(q => {
+    if (q.construct && PREFIX[q.construct]) {
+      counters[q.construct] = (counters[q.construct] || 0) + 1;
+      q.code = PREFIX[q.construct] + counters[q.construct];
+    }
+  });
 }
 
 // ── Panel interactions ─────────────────────────────────────
@@ -991,10 +1029,14 @@ async function publishSurvey(){
     });
     const data = await res.json();
 
-    if (data.status === 'created'){
+    if (data.status === 'error'){
+      if (st) st.textContent = '';
+      alert(data.error);
+      return;
+    } else if (data.status === 'created'){
       window.clearBuilderDirty?.();
       showCreatedModal(data.dashboard_url);
-      if (st) st.textContent = '';
+      if (st) st.textContent = ''; 
     } else if (data.status === 'published'){
       window.clearBuilderDirty?.();
       showPublishModal(data.dashboard_url);

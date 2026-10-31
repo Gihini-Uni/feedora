@@ -16,7 +16,6 @@ from django.views.decorators.cache import never_cache
 
 
 
-
 # ── Role selection ─────────────────────────────────────────
 
 @never_cache

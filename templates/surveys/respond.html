@@ -26,15 +26,29 @@
        min-height:100vh;-webkit-font-smoothing:antialiased;}
 
   /* Progress bar */
-  .progress-bar-wrap{position:sticky;top:0;z-index:100;background:#e8e8e0;margin-top: 8px !important;
-  height: 10px !important;}
+  .progress-bar-wrap{
+  position: sticky;
+  top: 51px;              /* ← sits just below the topbar */
+  z-index: 100;           /* ← below the topbar */
+  background: var(--bg);  /* or #e8e8e0 — the empty track color */
+  height: 10px;
+}
   .progress-bar{height:100%;background:var(--accent);width:0%;transition:width 0.4s ease;}
 
-  /* Topbar */
-  .topbar{background:var(--surface);border-bottom:1px solid var(--line);
-          padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
-  .topbar-brand{font-family:var(--serif);font-size:18px;color:var(--ink);text-decoration:none;}
-  .topbar-right{font-size:13px;color:var(--ink-3);}
+  /* Topbar — now at the very top */
+.topbar{
+  position: sticky;
+  top: 0;                 /* ← topbar is now the topmost element */
+  z-index: 101;           /* ← above the progress bar */
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.topbar-brand{font-family:var(--serif);font-size:18px;color:var(--ink);text-decoration:none;}
+.topbar-right{font-size:13px;color:var(--ink-3);}
 
   /* Page */
   .page{max-width:680px;margin:36px auto;padding:0 20px 80px;}
@@ -203,12 +217,13 @@
 </head>
 <body>
 
-<div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
 
 <div class="topbar">
   <a href="/" class="topbar-brand">Feedora</a>
   <div class="topbar-right"><span id="progressLabel">0 / {{ questions|length }} answered</span></div>
 </div>
+
+<div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
 
 <div class="page">
 
@@ -409,6 +424,7 @@
 <script>
 const TOTAL_Q = {{ questions|length }};
 const answeredSet = new Set();
+const POINTS_ENABLED = {% if points_enabled %}true{% else %}false{% endif %};
 
 function updateProgress(){
   const pct = TOTAL_Q > 0 ? (answeredSet.size / TOTAL_Q) * 100 : 0;
@@ -428,8 +444,10 @@ function markAnswered(qid, isTextarea){
     answeredSet.add(qid);
     const card = document.getElementById('qcard-' + qid);
     if (card) card.classList.remove('required-error');
-    const pts = card ? (card.dataset.points || '10') : '10';
-    showToast('+' + pts + ' pts');
+    if (POINTS_ENABLED) {                               // ← gate it
+      const pts = card ? (card.dataset.points || '10') : '10';
+      showToast('+' + pts + ' pts');
+    }
     updateProgress();
   }
 }
@@ -977,7 +995,7 @@ updateProgress();
 
   // click sound on all buttons (delegated)
   document.addEventListener('click', (e) => {
-    if (e.target.closest('button, .opt-item, .btn, a.done-btn')) {
+    if (e.target.closest('button, .opt-item, .btn, a.done-btn, .likert-radio, .star, .rating-num')) {
       window.playSound('click');
     }
   });

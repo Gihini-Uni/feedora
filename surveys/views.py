@@ -15,12 +15,32 @@ from django.utils import timezone
 from datetime import datetime
 from .ab_analytics import compare_surveys
 from accounts.utils import get_badges, get_level_info
+from collections import Counter
 
 
 @login_required
 def survey_type_select(request):
     return render(request, 'surveys/survey_type_select.html')
 
+HMSAM_MIN_PER_CONSTRUCT = 3
+
+def _hmsam_construct_ok(questions):
+    """
+    For an HMSAM survey, every construct that appears must keep at least
+    HMSAM_MIN_PER_CONSTRUCT questions. Returns (ok, error_message).
+    """
+    counts = Counter(
+        q.get('construct') for q in questions
+        if q.get('construct')
+    )
+    short = {c: n for c, n in counts.items() if n < HMSAM_MIN_PER_CONSTRUCT}
+    if short:
+        parts = ', '.join(f'{c} ({n})' for c, n in short.items())
+        return False, (
+            f'Each HMSAM construct must keep at least {HMSAM_MIN_PER_CONSTRUCT} '
+            f'questions. These are below the minimum: {parts}.'
+        )
+    return True, ''
 
 @login_required
 def create_survey(request, survey_type):
@@ -28,6 +48,12 @@ def create_survey(request, survey_type):
     if request.method == 'POST':
         data   = json.loads(request.body)
         action = data.get('action', 'publish')  # 'draft' or 'publish'
+
+        # HMSAM: enforce minimum questions per construct (publish only; drafts may be incomplete)
+        if is_hmsam and action == 'publish':
+            ok, err = _hmsam_construct_ok(data.get('questions', []))
+            if not ok:
+                return JsonResponse({'status': 'error', 'error': err}, status=400)
 
         survey = Survey.objects.create(
             organization=request.user,
@@ -486,6 +512,11 @@ def edit_survey(request, uid):
     if request.method == 'POST':
         data   = json.loads(request.body)
         action = data.get('action', 'draft')
+
+        if survey.is_hmsam and action == 'publish':
+            ok, err = _hmsam_construct_ok(data.get('questions', []))
+            if not ok:
+                return JsonResponse({'status': 'error', 'error': err}, status=400)
 
         # Update the existing survey instead of creating a new one
         survey.title  = data.get('title', survey.title)
