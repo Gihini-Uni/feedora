@@ -503,6 +503,7 @@ def respond_survey(request, uid):
         'questions': questions,
         'mascot_enabled': mascot_enabled,
         'mascot_position': features.get('mascot', {}).get('position', 'bottom-left'),
+        'points_enabled': points_config.get('enabled', False),
     })
 
 @login_required

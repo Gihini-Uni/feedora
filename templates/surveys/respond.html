@@ -264,9 +264,7 @@
         {% if question.hmsam_construct %}
           <span class="q-construct">{{ question.get_hmsam_construct_display }}</span>
         {% endif %}
-        {% if points_enabled %}
-          <span class="q-points-badge">+{{ question.point_value }} pts</span>
-        {% endif %}
+        
       </div>
  
       {% if question.question_type == 'likert' %}
