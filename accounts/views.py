@@ -178,9 +178,9 @@ def _send_verification_code(user):
         defaults={'code': code}
     )
     send_mail(
-        subject='Your Hoops verification code',
+        subject='Your Feedora verification code',
         message=f'Your verification code is: {code}\n\nThis code expires in 10 minutes.',
-        from_email='noreply@hoops.com',
+        from_email=None,
         recipient_list=[user.email],
     )
 
@@ -204,6 +204,7 @@ def respondent_home(request):
 @never_cache
 def creator_profile(request):
     profile, _ = CreatorProfile.objects.get_or_create(user=request.user)
+    organization = Organization.objects.filter(user=request.user).first() 
 
     if request.method == 'POST':
         profile.display_name = request.POST.get('display_name', '').strip()
@@ -223,6 +224,7 @@ def creator_profile(request):
     return render(request, 'accounts/creator_profile.html', {
         'profile':         profile,
         'surveys':         surveys,
+        'organization':    organization, 
         'survey_count':    surveys.count(),
         'total_responses': total_responses,
     })
